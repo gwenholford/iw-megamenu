@@ -1,0 +1,30 @@
+# Ignore Mac system files
+.DS_Store
+
+# Ignore Windows system files
+Thumbs.db
+Desktop.ini
+
+# Ignore log files
+*.log
+
+# Ignore node modules (if any)
+node_modules/
+
+# Ignore IDE/editor config
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore OS swap/backup files
+*.swp
+*~
+
+# Ignore zip and backup archives
+*.zip
+*.bak
+*.tmp
+
+# Ignore WordPress uploads (if present)
+wp-content/uploads/ 
