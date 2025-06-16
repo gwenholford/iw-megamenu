@@ -2,7 +2,7 @@
 /*
 Plugin Name: IW Mega Menu
 Description: A powerful, Elementor-optimized Mega Menu plugin with multi-level navigation and widget support. Developed for Austin Community College - Instructional Web Projects.
-Version: 1.0.0
+Version: 1.0.1
 Author: Austin Community College - Instructional Web Projects
 Author URI: https://instruction.austincc.edu
 Text Domain: iw-mega-menu
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'IW_MEGA_MENU_VERSION', '1.0.0' );
+define( 'IW_MEGA_MENU_VERSION', '1.0.1' );
 define( 'IW_MEGA_MENU_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'IW_MEGA_MENU_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -37,7 +37,6 @@ add_action('elementor/widgets/widgets_registered', function() {
     require_once IW_MEGA_MENU_PLUGIN_DIR . 'includes/widgets/class-iw-mega-menu-widget.php';
     \Elementor\Plugin::instance()->widgets_manager->register_widget_type( new \IW_Mega_Menu_Widget() );
 }); 
-add_action( 'wp_enqueue_scripts', 'iw_mega_menu_enqueue_styles' );
 
 add_action('wp_head', function() {
     ?>

@@ -25,9 +25,12 @@
   border-radius: 8px !important;
   transition: background 0.2s, color 0.2s;
   text-transform: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 .iw-mega-menu__dropdown {
-  display: none;
   position: absolute;
   left: 0;
   right: 0;
@@ -39,6 +42,15 @@
   z-index: 1002;
   margin-top: 8px;
   padding: 2rem 2rem;
+  opacity: 0;
+  transform: translateY(-16px);
+  transition: opacity 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none;
+}
+.iw-mega-menu__dropdown:not([hidden]) {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 .iw-mega-menu__dropdown--with-sidebar {
   display: grid;
@@ -58,17 +70,36 @@
 .iw-mega-menu__dropdown-main {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+}
+.iw-mega-menu__link-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.iw-mega-menu__description {
+  display: block;
+  font-family: 'Inter', Arial, sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: #111;
+  line-height: 1.4;
 }
 .iw-mega-menu__section-label {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
   font-family: 'Inter', Arial, sans-serif;
   font-weight: 600;
   color: #5a3fa0;
   margin-bottom: 0.5rem;
   font-size: 1rem;
   text-transform: none;
+  padding: 0.5rem 0;
+}
+.iw-mega-menu__section-label .iw-mega-menu__description {
+  color: #111;
 }
 .iw-mega-menu__icon {
   display: inline-flex;
@@ -80,10 +111,51 @@
   margin-right: 0.5em;
   overflow: visible;
   vertical-align: middle;
+  color: inherit !important;
+}
+.iw-mega-menu__icon svg,
+.iw-mega-menu__icon i {
+  width: 1rem !important;
+  height: 1rem !important;
+  font-size: 1rem !important;
+  display: inline-block;
+  vertical-align: middle;
+  fill: inherit !important;
+  color: inherit !important;
+}
+.iw-mega-menu__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background-color: #4D1979;
+  border-radius: 1rem;
+  text-transform: none;
+  letter-spacing: 0.025em;
+}
+.iw-mega-menu__top-link .iw-mega-menu__badge {
+  font-size: 0.7rem;
+  min-width: 1.25rem;
+  height: 1.25rem;
+}
+.iw-mega-menu__mobile-link .iw-mega-menu__badge {
+  font-size: 0.7rem;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.5rem;
 }
 .iw-mega-menu__section {
-  margin-left: 0;
-  padding-left: 0;
+  margin-top: 0.5rem;
+}
+.iw-mega-menu__section:first-child {
+  margin-top: 0.25rem;
 }
 .iw-mega-menu__section-content {
   color: #222;
@@ -91,6 +163,16 @@
   font-size: 0.9rem;
   font-weight: 500;
   padding-bottom: 1rem;
+  opacity: 0;
+  transform: translateY(-16px);
+  transition: opacity 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none;
+}
+.iw-mega-menu__section-content[aria-expanded="true"],
+.iw-mega-menu__section-content:not([hidden]) {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 .iw-mega-menu-sidebar {
   background: #f5f5fa;
@@ -129,7 +211,8 @@
   min-width: 120px;
 }
 .iw-mega-menu__third-link {
-  display: block;
+  display: flex;
+  flex-direction: column;
   font-family: 'Inter', Arial, sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
@@ -139,10 +222,12 @@
   transition: color 0.2s;
   text-transform: none;
 }
-.iw-mega-menu__third-link:hover,
-.iw-mega-menu__third-link:focus {
-  color: #3a2670;
-  text-decoration: underline;
+.iw-mega-menu__third-link .iw-mega-menu__description {
+  color: #111;
+}
+.iw-mega-menu__third-link:hover .iw-mega-menu__description,
+.iw-mega-menu__third-link:focus .iw-mega-menu__description {
+  color: rgba(58, 38, 112, 0.8);
 }
 /* Second-Level icon size override */
 .iw-mega-menu__section .iw-mega-menu__icon {
@@ -168,6 +253,12 @@
   flex: 1 1 50%;
   min-width: 0;
 }
+.iw-mega-menu__caret {
+  margin-left: 0.5rem !important;
+}
+.iw-mega-menu__description:not(:empty) {
+  margin-top: 0.25rem;
+}
 @media (max-width: 900px) {
   .iw-mega-menu__dropdown,
   .iw-mega-menu__dropdown--with-sidebar {
@@ -181,6 +272,22 @@
   .iw-mega-menu__dropdown-main,
   .iw-mega-menu-sidebar {
     padding: 0;
+  }
+  .iw-mega-menu__mobile-link {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    padding: 0.75rem 1rem;
+  }
+  .iw-mega-menu__mobile-link .iw-mega-menu__description {
+    color: #111;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 400;
+    font-size: 0.8rem;
+  }
+  .iw-mega-menu__mobile-link .iw-mega-menu__description:not(:empty) {
+    margin-top: 0.25rem;
   }
 }
 @media (min-width: 768px) and (max-width: 1024px) {
@@ -264,4 +371,41 @@
     overflow: visible !important;
     position: static !important;
   }
+}
+/* Icon color classes - only apply when explicitly set */
+.icon-acc-purple { color: #4D1979 !important; fill: #4D1979 !important; }
+.icon-acc-purple-dark { color: #2E1A47 !important; fill: #2E1A47 !important; }
+.icon-acc-teal { color: #00B2A9 !important; fill: #00B2A9 !important; }
+.icon-acc-blue-dark { color: #002F6C !important; fill: #002F6C !important; }
+.icon-acc-blue-light { color: #6787B7 !important; fill: #6787B7 !important; }
+.icon-acc-lime { color: #C1D82F !important; fill: #C1D82F !important; }
+.icon-acc-yellow { color: #F0B323 !important; fill: #F0B323 !important; }
+.icon-acc-orange { color: #FA4616 !important; fill: #FA4616 !important; }
+.icon-acc-red { color: #AF272F !important; fill: #AF272F !important; }
+.icon-acc-black { color: #000000 !important; fill: #000000 !important; }
+.icon-acc-grey { color: #8A8C8F !important; fill: #8A8C8F !important; }
+.iw-mega-menu__accordion-toggle {
+  background: #F3F4F5 !important;
+  color: #000 !important;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  transition: background 0.2s, color 0.2s;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.iw-mega-menu__accordion-toggle .iw-mega-menu__caret {
+  color: #000 !important;
+}
+.iw-mega-menu__accordion-toggle[aria-expanded="true"] {
+  background: #4D1979 !important;
+  color: #fff !important;
+}
+.iw-mega-menu__accordion-toggle[aria-expanded="true"] .iw-mega-menu__caret {
+  color: #fff !important;
 } 
