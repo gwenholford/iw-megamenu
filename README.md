@@ -56,6 +56,9 @@ A powerful, Elementor-optimized Mega Menu plugin with multi-level navigation and
 - **Bug Fixes:**
   - Resolved an issue where menu cards would disappear in the Elementor Editor after icon color changes.
   - Improved CSS specificity to ensure accordion button colors are always correct, regardless of theme overrides.
+- **Badges & Icons**
+  - Font Awesome caret icons for accordions (down/up)
+  - Menu item badges (e.g., "New", "Beta")
 
 #### Use Cases & Design Rationale
 - **Menu Item Descriptions:**
@@ -75,8 +78,6 @@ A powerful, Elementor-optimized Mega Menu plugin with multi-level navigation and
 ## Roadmap (Future)
 - Animated menu card transitions (slide & fade)
 - Individual icon color pickers (Elementor native)
-- Font Awesome caret icons for accordions (down/up)
-- Menu item badges (e.g., "New", "Beta")
 - Further accessibility and QOL improvements
 
 ## Support
