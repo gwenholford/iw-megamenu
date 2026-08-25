@@ -54,9 +54,39 @@ class IW_Mega_Menu_Widget extends Widget_Base {
         );
 
         $this->add_control(
+            'menu_source',
+            [
+                'label' => __( 'Menu Source', 'iw-mega-menu' ),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'legacy_repeater',
+                'options' => [
+                    'saved_menu' => __( 'Saved Menu (Builder)', 'iw-mega-menu' ),
+                    'legacy_repeater' => __( 'Legacy Repeater', 'iw-mega-menu' ),
+                ],
+                'description' => __( 'Choose "Saved Menu" to use the new IW Mega Menu Builder.', 'iw-mega-menu' ),
+            ]
+        );
+
+        $this->add_control(
+            'saved_menu_id',
+            [
+                'label' => __( 'Select Saved Menu', 'iw-mega-menu' ),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'options' => $this->get_saved_menus(),
+                'default' => '',
+                'condition' => [
+                    'menu_source' => 'saved_menu',
+                ],
+            ]
+        );
+
+        $this->add_control(
             'menu_items', [
                 'label' => __( 'Menu Items', 'iw-mega-menu' ),
                 'type' => Controls_Manager::REPEATER,
+                'condition' => [
+                    'menu_source' => 'legacy_repeater',
+                ],
                 'fields' => [
                     [
                         'name' => 'item_label',
@@ -512,33 +542,49 @@ class IW_Mega_Menu_Widget extends Widget_Base {
         $global_sidebar_template_id = ! empty( $settings['sidebar_template_id'] ) ? $settings['sidebar_template_id'] : false;
         $menu_id = 'iw-mega-menu-' . esc_attr( $this->get_id() );
         $mobile_panel_id = 'iw-mobile-panel-' . esc_attr( $this->get_id() );
-        $items = isset( $settings['menu_items'] ) && is_array( $settings['menu_items'] ) ? $settings['menu_items'] : [];
-
-        // Build menu tree from flat array (3 levels)
+        
         $tree = [];
-        $lookup = [];
-        foreach ( $items as $idx => $item ) {
-            $item['children'] = [];
-            $lookup[ $idx ] = $item;
-        }
+        $menu_source = ! empty( $settings['menu_source'] ) ? $settings['menu_source'] : 'legacy_repeater';
 
-        // Attach third-level to second-level, and second-level to top-level
-        foreach ( $lookup as $idx => &$item ) {
-            if ( $item['item_type'] === 'third' && isset( $lookup[ $item['parent_id'] ] ) && $lookup[ $item['parent_id'] ]['item_type'] === 'second' ) {
-                $lookup[ $item['parent_id'] ]['children'][ $idx ] = &$item;
+        if ( $menu_source === 'saved_menu' && ! empty( $settings['saved_menu_id'] ) ) {
+            $saved_data = get_post_meta( $settings['saved_menu_id'], '_iw_mega_menu_data', true );
+            if ( $saved_data ) {
+                $decoded = json_decode( $saved_data, true );
+                if ( ! empty( $decoded['items'] ) ) {
+                    $tree = $decoded['items'];
+                }
+                if ( ! empty( $decoded['settings']['global_sidebar_template_id'] ) ) {
+                    $global_sidebar_template_id = $decoded['settings']['global_sidebar_template_id'];
+                }
             }
-        }
-        foreach ( $lookup as $idx => &$item ) {
-            if ( $item['item_type'] === 'second' && isset( $lookup[ $item['parent_id'] ] ) && $lookup[ $item['parent_id'] ]['item_type'] === 'top' ) {
-                $lookup[ $item['parent_id'] ]['children'][ $idx ] = &$item;
+        } else {
+            $items = isset( $settings['menu_items'] ) && is_array( $settings['menu_items'] ) ? $settings['menu_items'] : [];
+
+            // Build menu tree from flat array (3 levels)
+            $lookup = [];
+            foreach ( $items as $idx => $item ) {
+                $item['children'] = [];
+                $lookup[ $idx ] = $item;
             }
-        }
-        foreach ( $lookup as $idx => &$item ) {
-            if ( $item['item_type'] === 'top' || (int) $item['parent_id'] === 0 ) {
-                $tree[ $idx ] = &$item;
+
+            // Attach third-level to second-level, and second-level to top-level
+            foreach ( $lookup as $idx => &$item ) {
+                if ( $item['item_type'] === 'third' && isset( $lookup[ $item['parent_id'] ] ) && $lookup[ $item['parent_id'] ]['item_type'] === 'second' ) {
+                    $lookup[ $item['parent_id'] ]['children'][ $idx ] = &$item;
+                }
             }
+            foreach ( $lookup as $idx => &$item ) {
+                if ( $item['item_type'] === 'second' && isset( $lookup[ $item['parent_id'] ] ) && $lookup[ $item['parent_id'] ]['item_type'] === 'top' ) {
+                    $lookup[ $item['parent_id'] ]['children'][ $idx ] = &$item;
+                }
+            }
+            foreach ( $lookup as $idx => &$item ) {
+                if ( $item['item_type'] === 'top' || (int) $item['parent_id'] === 0 ) {
+                    $tree[ $idx ] = &$item;
+                }
+            }
+            unset( $item );
         }
-        unset( $item );
 
         ?>
         <div class="iw-mega-menu-wrapper">
@@ -1010,6 +1056,27 @@ class IW_Mega_Menu_Widget extends Widget_Base {
             </nav>
         </div>
         <?php
+    }
+
+    /**
+     * Get saved IW Mega Menus for dropdown
+     *
+     * @return array Menu ID => Title
+     */
+    private function get_saved_menus() {
+        $menus = [ '' => __( 'Select a Menu', 'iw-mega-menu' ) ];
+        $posts = get_posts([
+            'post_type'      => 'iw_mega_menu',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+        ]);
+
+        if ( ! empty( $posts ) ) {
+            foreach ( $posts as $post ) {
+                $menus[ $post->ID ] = $post->post_title;
+            }
+        }
+        return $menus;
     }
 
     /**

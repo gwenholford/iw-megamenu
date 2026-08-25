@@ -2,7 +2,7 @@
 /**
  * Plugin Name: IW Mega Menu
  * Description: A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-level navigation and widget support. Developed for Austin Community College - Instructional Web Projects.
- * Version: 1.1.0
+ * Version: 2.0.0
  * Author: Austin Community College - Instructional Web Projects
  * Author URI: https://instruction.austincc.edu
  * Text Domain: iw-mega-menu
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define Plugin Constants
-define( 'IW_MEGA_MENU_VERSION', '1.1.0' );
+define( 'IW_MEGA_MENU_VERSION', '2.0.0' );
 define( 'IW_MEGA_MENU_FILE', __FILE__ );
 define( 'IW_MEGA_MENU_PATH', plugin_dir_path( __FILE__ ) );
 define( 'IW_MEGA_MENU_URL', plugin_dir_url( __FILE__ ) );
@@ -63,6 +63,9 @@ final class IW_Mega_Menu {
         // Register frontend assets
         add_action( 'wp_enqueue_scripts', [ $this, 'register_assets' ] );
 
+        // Initialize Core v2.0.0 Modules
+        $this->init_core_modules();
+
         // Elementor widget registration
         if ( did_action( 'elementor/loaded' ) ) {
             $this->init_elementor();
@@ -70,6 +73,24 @@ final class IW_Mega_Menu {
             add_action( 'elementor/loaded', [ $this, 'init_elementor' ] );
             add_action( 'admin_notices', [ $this, 'admin_notice_missing_elementor' ] );
         }
+    }
+
+    /**
+     * Initialize Core v2.0.0 Modules
+     */
+    private function init_core_modules() {
+        require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-cpt.php';
+        require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-rest.php';
+        require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-admin.php';
+
+        $cpt = new IW_Mega_Menu_CPT();
+        $cpt->init();
+
+        $rest = new IW_Mega_Menu_REST();
+        $rest->init();
+
+        $admin = new IW_Mega_Menu_Admin();
+        $admin->init();
     }
 
     /**

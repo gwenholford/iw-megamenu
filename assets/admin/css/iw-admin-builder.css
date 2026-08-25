@@ -1,0 +1,94 @@
+/**
+ * IW Mega Menu Admin Builder Styles
+ */
+
+.iw-mega-menu-admin-wrap {
+	margin-top: 20px;
+}
+
+#iw-mega-menu-builder-root {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	margin-top: 20px;
+	background: #fff;
+	padding: 20px;
+	border: 1px solid #ccd0d4;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.iw-builder-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 15px;
+	border-bottom: 1px solid #eee;
+}
+
+.iw-builder-controls {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+.iw-builder-main {
+	display: flex;
+	gap: 20px;
+	min-height: 600px;
+}
+
+.iw-builder-tree-panel {
+	flex: 1;
+	border-right: 1px solid #eee;
+	padding-right: 20px;
+}
+
+.iw-builder-preview-panel {
+	flex: 2;
+	background: #f0f0f1;
+	border: 1px dashed #ccc;
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.iw-builder-preview-iframe {
+	width: 100%;
+	height: 100%;
+	border: none;
+	background: #fff;
+	transition: width 0.3s ease;
+}
+
+/* Mobile Preview Mode */
+.iw-builder-preview-panel.is-mobile .iw-builder-preview-iframe {
+	width: 375px; /* Mobile width */
+	border: 1px solid #ccc;
+	box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.iw-tree-item {
+	border: 1px solid #ddd;
+	background: #f9f9f9;
+	margin-bottom: 10px;
+	padding: 10px;
+	cursor: grab;
+}
+
+.iw-tree-item-header {
+	display: flex;
+	justify-content: space-between;
+}
+
+.iw-tree-item-content {
+	display: none;
+	padding-top: 10px;
+	border-top: 1px solid #eee;
+	margin-top: 10px;
+}
+
+.iw-tree-item.is-expanded .iw-tree-item-content {
+	display: block;
+}
