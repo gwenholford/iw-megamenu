@@ -5,24 +5,54 @@ use Elementor\Repeater;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+/**
+ * IW Mega Menu Elementor Widget
+ *
+ * Provides a responsive, 3-level accessible mega menu navigation widget.
+ * Fully compatible with Elementor 3.x and backward-compatible with existing layouts.
+ */
 class IW_Mega_Menu_Widget extends Widget_Base {
+
     public function get_name() {
         return 'iw-mega-menu';
     }
+
     public function get_title() {
         return __( 'IW Mega Menu', 'iw-mega-menu' );
     }
+
     public function get_icon() {
         return 'eicon-menu-bar';
     }
+
     public function get_categories() {
         return [ 'general' ];
     }
+
+    public function get_script_depends() {
+        return [ 'iw-mega-menu' ];
+    }
+
+    public function get_style_depends() {
+        return [ 'iw-mega-menu' ];
+    }
+
+    /**
+     * Backward compatibility for older Elementor versions
+     */
     protected function _register_controls() {
+        $this->register_controls();
+    }
+
+    /**
+     * Register widget controls
+     */
+    protected function register_controls() {
         $this->start_controls_section(
             'section_menu',
             [ 'label' => __( 'Menu Structure', 'iw-mega-menu' ) ]
         );
+
         $this->add_control(
             'menu_items', [
                 'label' => __( 'Menu Items', 'iw-mega-menu' ),
@@ -118,6 +148,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
             ]
         );
         $this->end_controls_section();
+
         $this->start_controls_section(
             'section_sidebar',
             [ 'label' => __( 'Sidebar', 'iw-mega-menu' ) ]
@@ -132,6 +163,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
             ]
         );
         $this->end_controls_section();
+
         // Top-Level Style Controls
         $this->start_controls_section(
             'section_style_top',
@@ -197,10 +229,11 @@ class IW_Mega_Menu_Widget extends Widget_Base {
                 ],
             ]
         );
+
         $this->start_controls_tabs('tabs_top_states');
         $this->start_controls_tab('tab_top_normal', [ 'label' => __('Normal', 'iw-mega-menu') ]);
-        // Normal state controls already above
         $this->end_controls_tab();
+
         $this->start_controls_tab('tab_top_hover', [ 'label' => __('Hover', 'iw-mega-menu') ]);
         $this->add_control('top_color_hover', [
             'label' => __('Text Color', 'iw-mega-menu'),
@@ -217,6 +250,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
             ],
         ]);
         $this->end_controls_tab();
+
         $this->start_controls_tab('tab_top_active', [ 'label' => __('Active', 'iw-mega-menu') ]);
         $this->add_control('top_color_active', [
             'label' => __('Text Color', 'iw-mega-menu'),
@@ -235,6 +269,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
         $this->end_controls_tab();
         $this->end_controls_tabs();
         $this->end_controls_section();
+
         // Second-Level Style Controls
         $this->start_controls_section(
             'section_style_second',
@@ -291,9 +326,11 @@ class IW_Mega_Menu_Widget extends Widget_Base {
                 ],
             ]
         );
+
         $this->start_controls_tabs('tabs_second_states');
         $this->start_controls_tab('tab_second_normal', [ 'label' => __('Normal', 'iw-mega-menu') ]);
         $this->end_controls_tab();
+
         $this->start_controls_tab('tab_second_hover', [ 'label' => __('Hover', 'iw-mega-menu') ]);
         $this->add_control('second_color_hover', [
             'label' => __('Text Color', 'iw-mega-menu'),
@@ -310,6 +347,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
             ],
         ]);
         $this->end_controls_tab();
+
         $this->start_controls_tab('tab_second_active', [ 'label' => __('Active', 'iw-mega-menu') ]);
         $this->add_control('second_color_active', [
             'label' => __('Text Color', 'iw-mega-menu'),
@@ -328,6 +366,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
         $this->end_controls_tab();
         $this->end_controls_tabs();
         $this->end_controls_section();
+
         // Third-Level Style Controls
         $this->start_controls_section(
             'section_style_third',
@@ -384,9 +423,11 @@ class IW_Mega_Menu_Widget extends Widget_Base {
                 ],
             ]
         );
+
         $this->start_controls_tabs('tabs_third_states');
         $this->start_controls_tab('tab_third_normal', [ 'label' => __('Normal', 'iw-mega-menu') ]);
         $this->end_controls_tab();
+
         $this->start_controls_tab('tab_third_hover', [ 'label' => __('Hover', 'iw-mega-menu') ]);
         $this->add_control('third_color_hover', [
             'label' => __('Text Color', 'iw-mega-menu'),
@@ -403,6 +444,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
             ],
         ]);
         $this->end_controls_tab();
+
         $this->start_controls_tab('tab_third_active', [ 'label' => __('Active', 'iw-mega-menu') ]);
         $this->add_control('third_color_active', [
             'label' => __('Text Color', 'iw-mega-menu'),
@@ -421,6 +463,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
         $this->end_controls_tab();
         $this->end_controls_tabs();
         $this->end_controls_section();
+
         // Icon Style Controls
         $this->start_controls_section(
             'section_style_icon',
@@ -460,409 +503,338 @@ class IW_Mega_Menu_Widget extends Widget_Base {
         );
         $this->end_controls_section();
     }
+
+    /**
+     * Render widget on frontend
+     */
     protected function render() {
         $settings = $this->get_settings_for_display();
-        $global_sidebar_template_id = !empty($settings['sidebar_template_id']) ? $settings['sidebar_template_id'] : false;
-        $menu_id = 'iw-mega-menu-' . $this->get_id();
-        $items = isset($settings['menu_items']) ? $settings['menu_items'] : [];
-        // Build menu tree from flat array (robust for 3 levels)
+        $global_sidebar_template_id = ! empty( $settings['sidebar_template_id'] ) ? $settings['sidebar_template_id'] : false;
+        $menu_id = 'iw-mega-menu-' . esc_attr( $this->get_id() );
+        $mobile_panel_id = 'iw-mobile-panel-' . esc_attr( $this->get_id() );
+        $items = isset( $settings['menu_items'] ) && is_array( $settings['menu_items'] ) ? $settings['menu_items'] : [];
+
+        // Build menu tree from flat array (3 levels)
         $tree = [];
         $lookup = [];
-        foreach ($items as $idx => $item) {
+        foreach ( $items as $idx => $item ) {
             $item['children'] = [];
-            $lookup[$idx] = $item;
+            $lookup[ $idx ] = $item;
         }
+
         // Attach third-level to second-level, and second-level to top-level
-        foreach ($lookup as $idx => &$item) {
-            if ($item['item_type'] === 'third' && isset($lookup[$item['parent_id']]) && $lookup[$item['parent_id']]['item_type'] === 'second') {
-                $lookup[$item['parent_id']]['children'][$idx] = &$item;
+        foreach ( $lookup as $idx => &$item ) {
+            if ( $item['item_type'] === 'third' && isset( $lookup[ $item['parent_id'] ] ) && $lookup[ $item['parent_id'] ]['item_type'] === 'second' ) {
+                $lookup[ $item['parent_id'] ]['children'][ $idx ] = &$item;
             }
         }
-        foreach ($lookup as $idx => &$item) {
-            if ($item['item_type'] === 'second' && isset($lookup[$item['parent_id']]) && $lookup[$item['parent_id']]['item_type'] === 'top') {
-                $lookup[$item['parent_id']]['children'][$idx] = &$item;
+        foreach ( $lookup as $idx => &$item ) {
+            if ( $item['item_type'] === 'second' && isset( $lookup[ $item['parent_id'] ] ) && $lookup[ $item['parent_id'] ]['item_type'] === 'top' ) {
+                $lookup[ $item['parent_id'] ]['children'][ $idx ] = &$item;
             }
         }
-        foreach ($lookup as $idx => &$item) {
-            if ($item['item_type'] === 'top' || $item['parent_id'] == 0) {
-                $tree[$idx] = &$item;
+        foreach ( $lookup as $idx => &$item ) {
+            if ( $item['item_type'] === 'top' || (int) $item['parent_id'] === 0 ) {
+                $tree[ $idx ] = &$item;
             }
         }
-        unset($item);
-        echo '<nav class="iw-mega-menu__nav" id="' . esc_attr($menu_id) . '">';
-        echo '<ul class="iw-mega-menu__top-level">';
-        foreach ($tree as $i => $top) {
-            $has_dropdown = !empty($top['children']);
-            $url = isset($top['item_link']['url']) ? $top['item_link']['url'] : '';
-            echo '<li class="iw-mega-menu__top-item">';
-            if ($url) {
-                // Render as <a> if URL is set
-                echo '<a class="iw-mega-menu__top-link" href="' . esc_url($url) . '"' . ($has_dropdown ? ' aria-haspopup="true" aria-expanded="false" data-dropdown-index="' . $i . '"' : '') . '>';
-                echo '<span class="iw-mega-menu__link-content">';
-                echo esc_html($top['item_label']);
-                if (!empty($top['item_badge'])) {
-                    echo '<span class="iw-mega-menu__badge">' . esc_html($top['item_badge']) . '</span>';
-                }
-                echo '</span>';
-                echo '</a>';
-            } else {
-                // Render as <button> if no URL
-                echo '<button class="iw-mega-menu__top-link" type="button"' . ($has_dropdown ? ' aria-haspopup="true" aria-expanded="false" data-dropdown-index="' . $i . '"' : '') . '>';
-                echo '<span class="iw-mega-menu__link-content">';
-                echo esc_html($top['item_label']);
-                if (!empty($top['item_badge'])) {
-                    echo '<span class="iw-mega-menu__badge">' . esc_html($top['item_badge']) . '</span>';
-                }
-                echo '</span>';
-                echo '</button>';
-            }
-            echo '</li>';
-        }
-        echo '</ul>';
-        // Render all dropdowns as direct children of nav
-        foreach ($tree as $i => $top) {
-            if (empty($top['children'])) continue;
-            $dropdown_id = $menu_id . '-dropdown-' . $i;
-            $sidebar_template_id = !empty($top['sidebar_template_id']) ? $top['sidebar_template_id'] : $global_sidebar_template_id;
-            $has_sidebar = !empty($sidebar_template_id);
-            $dropdown_class = 'iw-mega-menu__dropdown';
-            if ($has_sidebar) {
-                $dropdown_class .= ' iw-mega-menu__dropdown--with-sidebar';
-            } else {
-                $dropdown_class .= ' iw-mega-menu__dropdown--no-sidebar';
-            }
-            echo '<div class="' . esc_attr($dropdown_class) . '" id="' . esc_attr($dropdown_id) . '" data-dropdown-index="' . $i . '" tabindex="-1" hidden>';
-            // Main content
-            echo '<div class="iw-mega-menu__dropdown-main">';
-            // Segment second-level links
-            $non_accordion = [];
-            $accordion = [];
-            foreach ($top['children'] as $j => $second) {
-                if ($second['is_accordion'] === 'yes') {
-                    $accordion[$j] = $second;
-                } else {
-                    $non_accordion[$j] = $second;
-                }
-            }
-            // Two-column layout for non-accordion links (max 4 per column)
-            $non_accordion_links = array_values($non_accordion);
-            $columns = [[], []];
-            foreach ($non_accordion_links as $idx => $link) {
-                $col = floor($idx / 4); // 0 or 1
-                if ($col < 2) {
-                    $columns[$col][] = $link;
-                }
-            }
-            if (count($non_accordion_links) > 0) {
-                echo '<div class="iw-mega-menu__second-list">';
-                for ($c = 0; $c < 2; $c++) {
-                    echo '<div class="iw-mega-menu__second-col">';
-                    foreach ($columns[$c] as $k => $second) {
-                        // Label with icon in-line
-                        echo '<a class="iw-mega-menu__section-label" href="' . esc_url($second['item_link']['url']) . '">';
-                        echo '<span class="iw-mega-menu__link-content">';
-                        if (!empty($second['item_icon']['value'])) {
-                            $icon_class = !empty($second['item_icon_class']) ? esc_attr($second['item_icon_class']) : 'icon-acc-purple';
-                            echo '<span class="iw-mega-menu__icon ' . $icon_class . '">';
-                            \Elementor\Icons_Manager::render_icon($second['item_icon'], [ 'aria-hidden' => 'true' ]);
-                            echo '</span>';
-                        }
-                        echo esc_html($second['item_label']);
-                        if (!empty($second['item_badge'])) {
-                            echo '<span class="iw-mega-menu__badge">' . esc_html($second['item_badge']) . '</span>';
-                        }
-                        echo '</span>';
-                        if (!empty($second['item_description'])) {
-                            echo '<span class="iw-mega-menu__description">' . esc_html($second['item_description']) . '</span>';
-                        }
-                        echo '</a>';
-                    }
-                    echo '</div>';
-                }
-                echo '</div>';
-            }
-            // Accordion links below
-            foreach ($accordion as $j => $second) {
-                $is_accordion = true;
-                $section_id = $dropdown_id . '-section-' . $j;
-                echo '<div class="iw-mega-menu__section iw-mega-menu__accordion">';
-                // Icon
-                if (!empty($second['item_icon']['value'])) {
-                    $icon_class = !empty($second['item_icon_class']) ? esc_attr($second['item_icon_class']) : 'icon-acc-purple';
-                    echo '<span class="iw-mega-menu__icon ' . $icon_class . '">';
-                    \Elementor\Icons_Manager::render_icon($second['item_icon'], [ 'aria-hidden' => 'true' ]);
-                    echo '</span>';
-                }
-                // Accordion label with icon in-line
-                echo '<button class="iw-mega-menu__section-label iw-mega-menu__accordion-toggle" type="button" aria-controls="' . esc_attr($section_id) . '" aria-expanded="false">';
-                echo '<span class="iw-mega-menu__link-content">';
-                if (!empty($second['item_icon']['value'])) {
-                    $icon_class = !empty($second['item_icon_class']) ? esc_attr($second['item_icon_class']) : 'icon-acc-purple';
-                    echo '<span class="iw-mega-menu__icon ' . $icon_class . '">';
-                    \Elementor\Icons_Manager::render_icon($second['item_icon'], [ 'aria-hidden' => 'true' ]);
-                    echo '</span>';
-                }
-                echo esc_html($second['item_label']);
-                if (!empty($second['item_badge'])) {
-                    echo '<span class="iw-mega-menu__badge">' . esc_html($second['item_badge']) . '</span>';
-                }
-                if (!empty($second['item_description'])) {
-                    echo '<span class="iw-mega-menu__description">' . esc_html($second['item_description']) . '</span>';
-                }
-                echo ' <span class="iw-mega-menu__caret" aria-hidden="true"><i class="fa-regular fa-square-caret-down"></i></span></button>';
-                // Third-level links (accordion content)
-                echo '<div class="iw-mega-menu__section-content" id="' . esc_attr($section_id) . '" hidden>';
-                $third_links = array_values($second['children']);
-                $columns = [[], [], []];
-                foreach ($third_links as $idx => $link) {
-                    $col = floor($idx / 2); // 0, 1, 2
-                    if ($col < 3) {
-                        $columns[$col][] = $link;
-                    }
-                }
-                echo '<div class="iw-mega-menu__third-list">';
-                for ($c = 0; $c < 3; $c++) {
-                    echo '<div class="iw-mega-menu__third-col">';
-                    foreach ($columns[$c] as $third) {
-                        echo '<a class="iw-mega-menu__third-link" href="' . esc_url($third['item_link']['url']) . '">';
-                        echo '<span class="iw-mega-menu__link-content">';
-                        echo esc_html($third['item_label']);
-                        if (!empty($third['item_badge'])) {
-                            echo '<span class="iw-mega-menu__badge">' . esc_html($third['item_badge']) . '</span>';
-                        }
-                        echo '</span>';
-                        echo '</a>';
-                    }
-                    echo '</div>';
-                }
-                echo '</div>';
-                echo '</div>';
-                echo '</div>';
-            }
-            echo '</div>';
-            // Sidebar (only if present)
-            if ($has_sidebar) {
-                echo '<aside class="iw-mega-menu-sidebar">';
-                echo $this->get_sidebar_template_content($sidebar_template_id);
-                echo '</aside>';
-            }
-            echo '</div>';
-            // Mouse buffer for dropdown persistence
-            echo '<div class="iw-mega-menu__dropdown-buffer" data-dropdown-index="' . $i . '"></div>';
-        }
-        echo '</nav>';
-        // Hamburger toggle and mobile menu panel
-        echo '<button class="iw-mega-menu__mobile-toggle" aria-label="Open menu" style="display:none;">&#9776;</button>';
-        echo '<nav class="iw-mega-menu__mobile-panel" hidden tabindex="-1">';
-        echo '<div class="iw-mega-menu__mobile-topbar">';
-        echo '<button class="iw-mega-menu__mobile-close" aria-label="Close menu">&times;</button>';
-        echo '</div>';
-        echo '<ul class="iw-mega-menu__mobile-list">';
-        foreach ($tree as $i => $top) {
-            echo '<li class="iw-mega-menu__mobile-item">';
-            $has_children = !empty($top['children']);
-            $is_accordion = false;
-            echo '<button class="iw-mega-menu__mobile-link" type="button" data-mobile-index="' . $i . '"';
-            if ($has_children) echo ' aria-expanded="false" aria-controls="mobile-sublist-' . $i . '"';
-            echo '>' . esc_html($top['item_label']);
-            if (!empty($top['item_badge'])) {
-                echo '<span class="iw-mega-menu__badge">' . esc_html($top['item_badge']) . '</span>';
-            }
-            if ($has_children) echo '<span class="iw-mega-menu__mobile-caret"><i class="fa-regular fa-square-caret-down"></i></span>';
-            echo '</button>';
-            if ($has_children) {
-                echo '<ul class="iw-mega-menu__mobile-sublist" id="mobile-sublist-' . $i . '" hidden>';
-                foreach ($top['children'] as $j => $second) {
-                    $has_third = !empty($second['children']);
-                    $is_accordion = $second['is_accordion'] === 'yes';
-                    echo '<li class="iw-mega-menu__mobile-item">';
-                    echo '<button class="iw-mega-menu__mobile-link" type="button" data-mobile-index="' . $i . '-' . $j . '"';
-                    if ($has_third) echo ' aria-expanded="false" aria-controls="mobile-sublist-' . $i . '-' . $j . '"';
-                    echo '>' . esc_html($second['item_label']);
-                    if (!empty($second['item_badge'])) {
-                        echo '<span class="iw-mega-menu__badge">' . esc_html($second['item_badge']) . '</span>';
-                    }
-                    if ($has_third) echo '<span class="iw-mega-menu__mobile-caret"><i class="fa-regular fa-square-caret-down"></i></span>';
-                    echo '</button>';
-                    if ($has_third) {
-                        echo '<ul class="iw-mega-menu__mobile-sublist" id="mobile-sublist-' . $i . '-' . $j . '" hidden>';
-                        foreach ($second['children'] as $third) {
-                            echo '<li class="iw-mega-menu__mobile-item">';
-                            echo '<a class="iw-mega-menu__mobile-link" href="' . esc_url($third['item_link']['url']) . '">' . esc_html($third['item_label']);
-                            if (!empty($third['item_badge'])) {
-                                echo '<span class="iw-mega-menu__badge">' . esc_html($third['item_badge']) . '</span>';
-                            }
-                            echo '</a>';
-                            echo '</li>';
-                        }
-                        echo '</ul>';
-                    }
-                    echo '</li>';
-                }
-                echo '</ul>';
-            }
-            echo '</li>';
-        }
-        echo '</ul>';
-        echo '</nav>';
-        // JS for dropdown and accordion
+        unset( $item );
+
         ?>
-        <script>
-        (function(){
-            var nav = document.getElementById('<?php echo esc_js($menu_id); ?>');
-            if (!nav) return;
-            var topItems = nav.querySelectorAll('.iw-mega-menu__top-item');
-            var dropdowns = nav.querySelectorAll('.iw-mega-menu__dropdown');
-            var buffers = nav.querySelectorAll('.iw-mega-menu__dropdown-buffer');
-            // Hide all buffers on page load
-            buffers.forEach(function(b){ b.hidden = true; });
-            function hideAllDropdowns() {
-                dropdowns.forEach(function(dd){ dd.hidden = true; });
-                buffers.forEach(function(b){ b.hidden = true; });
-                nav.querySelectorAll('.iw-mega-menu__top-link[aria-expanded]')
-                  .forEach(function(btn){ btn.setAttribute('aria-expanded', 'false'); });
-            }
-            
-            // Add event listeners to top-level items
-            topItems.forEach(function(item){
-                var btn = item.querySelector('.iw-mega-menu__top-link');
-                if (!btn) return;
-                var idx = btn.getAttribute('data-dropdown-index');
-                if (idx === null) return;
-                var dropdown = nav.querySelector('.iw-mega-menu__dropdown[data-dropdown-index="' + idx + '"]');
-                var buffer = nav.querySelector('.iw-mega-menu__dropdown-buffer[data-dropdown-index="' + idx + '"]');
-                var open = false;
-                var timeout;
-                var showDropdown = function() {
-                    clearTimeout(timeout);
-                    hideAllDropdowns();
-                    if (dropdown) {
-                        dropdown.hidden = false;
-                        dropdown.style.opacity = '1';
-                        dropdown.style.transform = 'translateY(0)';
-                        dropdown.style.pointerEvents = 'auto';
-                    }
-                    if (buffer) buffer.hidden = false;
-                    btn.setAttribute('aria-expanded', 'true');
-                    open = true;
-                };
-                var hideDropdown = function() {
-                    timeout = setTimeout(function() {
-                        if (dropdown) {
-                            dropdown.hidden = true;
-                            dropdown.style.opacity = '0';
-                            dropdown.style.transform = 'translateY(-16px)';
-                            dropdown.style.pointerEvents = 'none';
-                        }
-                        if (buffer) buffer.hidden = true;
-                        btn.setAttribute('aria-expanded', 'false');
-                        open = false;
-                    }, 120);
-                };
-                btn.addEventListener('mouseenter', showDropdown);
-                btn.addEventListener('focus', showDropdown);
-                item.addEventListener('mouseleave', hideDropdown);
-                btn.addEventListener('blur', function(e){
-                    if (!nav.contains(e.relatedTarget)) hideDropdown();
-                });
-                if (dropdown) {
-                    dropdown.addEventListener('mouseenter', function(){ clearTimeout(timeout); });
-                    dropdown.addEventListener('mouseleave', hideDropdown);
-                }
-                if (buffer) {
-                    buffer.addEventListener('mouseenter', function(){ clearTimeout(timeout); showDropdown(); });
-                    buffer.addEventListener('mouseleave', hideDropdown);
-                }
-            });
-            // Hide all dropdowns on nav mouseleave
-            nav.addEventListener('mouseleave', hideAllDropdowns);
-            // Accordion logic
-            nav.querySelectorAll('.iw-mega-menu__accordion-toggle').forEach(function(toggle){
-                toggle.addEventListener('click', function(){
-                    var expanded = toggle.getAttribute('aria-expanded') === 'true';
-                    var content = nav.querySelector('#' + toggle.getAttribute('aria-controls'));
-                    if (!content) return;
-                    var caret = toggle.querySelector('.iw-mega-menu__caret i');
-                    if (expanded) {
-                        toggle.setAttribute('aria-expanded', 'false');
-                        content.hidden = true;
-                        if (caret) {
-                            caret.className = 'fa-regular fa-square-caret-down';
-                        }
-                    } else {
-                        toggle.setAttribute('aria-expanded', 'true');
-                        content.hidden = false;
-                        if (caret) {
-                            caret.className = 'fa-solid fa-square-caret-up';
-                        }
-                    }
-                });
-            });
-            // Mobile menu logic
-            var mobileToggle = document.querySelector('.iw-mega-menu__mobile-toggle');
-            var mobilePanel = document.querySelector('.iw-mega-menu__mobile-panel');
-            var mobileClose = document.querySelector('.iw-mega-menu__mobile-close');
-            if (mobileToggle && mobilePanel) {
-                function openMobileMenu() {
-                    mobilePanel.hidden = false;
-                    document.body.style.overflow = 'hidden';
-                    mobilePanel.focus();
-                }
-                function closeMobileMenu() {
-                    mobilePanel.hidden = true;
-                    document.body.style.overflow = '';
-                }
-                mobileToggle.addEventListener('click', openMobileMenu);
-                if (mobileClose) mobileClose.addEventListener('click', closeMobileMenu);
-                // Close on Escape
-                mobilePanel.addEventListener('keydown', function(e){
-                    if (e.key === 'Escape') closeMobileMenu();
-                });
-                // Collapsible logic
-                mobilePanel.querySelectorAll('.iw-mega-menu__mobile-link[aria-controls]').forEach(function(btn){
-                    btn.addEventListener('click', function(){
-                        var expanded = btn.getAttribute('aria-expanded') === 'true';
-                        var sublist = mobilePanel.querySelector('#' + btn.getAttribute('aria-controls'));
-                        if (!sublist) return;
-                        if (expanded) {
-                            btn.setAttribute('aria-expanded', 'false');
-                            sublist.hidden = true;
-                            btn.querySelector('.iw-mega-menu__mobile-caret i').className = 'fa-regular fa-square-caret-down';
-                        } else {
-                            btn.setAttribute('aria-expanded', 'true');
-                            sublist.hidden = false;
-                            btn.querySelector('.iw-mega-menu__mobile-caret i').className = 'fa-solid fa-square-caret-up';
-                        }
-                    });
-                });
-            }
-            // Show/hide hamburger based on screen size
-            function updateMobileToggle() {
-                if (window.innerWidth <= 767) {
-                    if (mobileToggle) mobileToggle.style.display = 'flex';
-                } else {
-                    if (mobileToggle) mobileToggle.style.display = 'none';
-                    if (mobilePanel) mobilePanel.hidden = true;
-                }
-            }
-            window.addEventListener('resize', updateMobileToggle);
-            updateMobileToggle();
-        })();
-        </script>
+        <div class="iw-mega-menu-wrapper">
+            <nav class="iw-mega-menu__nav" id="<?php echo esc_attr( $menu_id ); ?>" aria-label="<?php echo esc_attr__( 'Main Navigation', 'iw-mega-menu' ); ?>">
+                <ul class="iw-mega-menu__top-level">
+                    <?php foreach ( $tree as $i => $top ) : 
+                        $has_dropdown = ! empty( $top['children'] );
+                        $url = ! empty( $top['item_link']['url'] ) ? $top['item_link']['url'] : '';
+                        $dropdown_id = $menu_id . '-dropdown-' . esc_attr( $i );
+                        $sidebar_template_id = ! empty( $top['sidebar_template_id'] ) ? $top['sidebar_template_id'] : $global_sidebar_template_id;
+                        $has_sidebar = ! empty( $sidebar_template_id );
+                        $dropdown_class = 'iw-mega-menu__dropdown ' . ( $has_sidebar ? 'iw-mega-menu__dropdown--with-sidebar' : 'iw-mega-menu__dropdown--no-sidebar' );
+                    ?>
+                        <li class="iw-mega-menu__top-item">
+                            <?php if ( $has_dropdown ) : ?>
+                                <button class="iw-mega-menu__top-link" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="<?php echo esc_attr( $dropdown_id ); ?>" data-dropdown-index="<?php echo esc_attr( $i ); ?>">
+                                    <span class="iw-mega-menu__link-content">
+                                        <?php echo esc_html( $top['item_label'] ); ?>
+                                        <?php if ( ! empty( $top['item_badge'] ) ) : ?>
+                                            <span class="iw-mega-menu__badge"><?php echo esc_html( $top['item_badge'] ); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </button>
+
+                                <div class="<?php echo esc_attr( $dropdown_class ); ?>" id="<?php echo esc_attr( $dropdown_id ); ?>" data-dropdown-index="<?php echo esc_attr( $i ); ?>" tabindex="-1" hidden>
+                                    <div class="iw-mega-menu__dropdown-main">
+                                        <?php
+                                        $non_accordion = [];
+                                        $accordion = [];
+                                        foreach ( $top['children'] as $j => $second ) {
+                                            if ( isset( $second['is_accordion'] ) && $second['is_accordion'] === 'yes' ) {
+                                                $accordion[ $j ] = $second;
+                                            } else {
+                                                $non_accordion[ $j ] = $second;
+                                            }
+                                        }
+
+                                        // Two-column layout for non-accordion links (max 4 per column)
+                                        $non_accordion_links = array_values( $non_accordion );
+                                        $columns = [ [], [] ];
+                                        foreach ( $non_accordion_links as $idx => $link ) {
+                                            $col = (int) floor( $idx / 4 );
+                                            if ( $col < 2 ) {
+                                                $columns[ $col ][] = $link;
+                                            }
+                                        }
+
+                                        if ( count( $non_accordion_links ) > 0 ) : ?>
+                                            <div class="iw-mega-menu__second-list">
+                                                <?php for ( $c = 0; $c < 2; $c++ ) : ?>
+                                                    <div class="iw-mega-menu__second-col">
+                                                        <?php foreach ( $columns[ $c ] as $k => $second ) : 
+                                                            $second_url = ! empty( $second['item_link']['url'] ) ? $second['item_link']['url'] : '';
+                                                        ?>
+                                                            <?php if ( $second_url ) : ?>
+                                                                <a class="iw-mega-menu__section-label" href="<?php echo esc_url( $second_url ); ?>">
+                                                            <?php else : ?>
+                                                                <div class="iw-mega-menu__section-label" role="heading" aria-level="3">
+                                                            <?php endif; ?>
+
+                                                                <span class="iw-mega-menu__link-content">
+                                                                    <?php if ( ! empty( $second['item_icon']['value'] ) ) : 
+                                                                        $icon_class = ! empty( $second['item_icon_class'] ) ? esc_attr( $second['item_icon_class'] ) : 'icon-acc-purple';
+                                                                    ?>
+                                                                        <span class="iw-mega-menu__icon <?php echo $icon_class; ?>" aria-hidden="true">
+                                                                            <?php \Elementor\Icons_Manager::render_icon( $second['item_icon'], [ 'aria-hidden' => 'true' ] ); ?>
+                                                                        </span>
+                                                                    <?php endif; ?>
+                                                                    <?php echo esc_html( $second['item_label'] ); ?>
+                                                                    <?php if ( ! empty( $second['item_badge'] ) ) : ?>
+                                                                        <span class="iw-mega-menu__badge"><?php echo esc_html( $second['item_badge'] ); ?></span>
+                                                                    <?php endif; ?>
+                                                                </span>
+                                                                <?php if ( ! empty( $second['item_description'] ) ) : ?>
+                                                                    <span class="iw-mega-menu__description"><?php echo esc_html( $second['item_description'] ); ?></span>
+                                                                <?php endif; ?>
+
+                                                            <?php if ( $second_url ) : ?>
+                                                                </a>
+                                                            <?php else : ?>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php endfor; ?>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php // Accordion sections below
+                                        foreach ( $accordion as $j => $second ) : 
+                                            $section_id = $dropdown_id . '-section-' . esc_attr( $j );
+                                        ?>
+                                            <div class="iw-mega-menu__section iw-mega-menu__accordion">
+                                                <button class="iw-mega-menu__section-label iw-mega-menu__accordion-toggle" type="button" aria-controls="<?php echo esc_attr( $section_id ); ?>" aria-expanded="false">
+                                                    <span class="iw-mega-menu__link-content">
+                                                        <?php if ( ! empty( $second['item_icon']['value'] ) ) : 
+                                                            $icon_class = ! empty( $second['item_icon_class'] ) ? esc_attr( $second['item_icon_class'] ) : 'icon-acc-purple';
+                                                        ?>
+                                                            <span class="iw-mega-menu__icon <?php echo $icon_class; ?>" aria-hidden="true">
+                                                                <?php \Elementor\Icons_Manager::render_icon( $second['item_icon'], [ 'aria-hidden' => 'true' ] ); ?>
+                                                            </span>
+                                                        <?php endif; ?>
+                                                        <?php echo esc_html( $second['item_label'] ); ?>
+                                                        <?php if ( ! empty( $second['item_badge'] ) ) : ?>
+                                                            <span class="iw-mega-menu__badge"><?php echo esc_html( $second['item_badge'] ); ?></span>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                    <?php if ( ! empty( $second['item_description'] ) ) : ?>
+                                                        <span class="iw-mega-menu__description"><?php echo esc_html( $second['item_description'] ); ?></span>
+                                                    <?php endif; ?>
+                                                    <span class="iw-mega-menu__caret" aria-hidden="true"><i class="fa-regular fa-square-caret-down"></i></span>
+                                                </button>
+
+                                                <div class="iw-mega-menu__section-content" id="<?php echo esc_attr( $section_id ); ?>" hidden>
+                                                    <?php
+                                                    $third_links = isset( $second['children'] ) && is_array( $second['children'] ) ? array_values( $second['children'] ) : [];
+                                                    $columns = [ [], [], [] ];
+                                                    foreach ( $third_links as $idx => $link ) {
+                                                        $col = (int) floor( $idx / 2 );
+                                                        if ( $col < 3 ) {
+                                                            $columns[ $col ][] = $link;
+                                                        }
+                                                    }
+                                                    ?>
+                                                    <div class="iw-mega-menu__third-list">
+                                                        <?php for ( $c = 0; $c < 3; $c++ ) : ?>
+                                                            <div class="iw-mega-menu__third-col">
+                                                                <?php foreach ( $columns[ $c ] as $third ) : 
+                                                                    $third_url = ! empty( $third['item_link']['url'] ) ? $third['item_link']['url'] : '#';
+                                                                ?>
+                                                                    <a class="iw-mega-menu__third-link" href="<?php echo esc_url( $third_url ); ?>">
+                                                                        <span class="iw-mega-menu__link-content">
+                                                                            <?php echo esc_html( $third['item_label'] ); ?>
+                                                                            <?php if ( ! empty( $third['item_badge'] ) ) : ?>
+                                                                                <span class="iw-mega-menu__badge"><?php echo esc_html( $third['item_badge'] ); ?></span>
+                                                                            <?php endif; ?>
+                                                                        </span>
+                                                                    </a>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        <?php endfor; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <?php if ( $has_sidebar ) : ?>
+                                        <aside class="iw-mega-menu-sidebar">
+                                            <?php echo $this->get_sidebar_template_content( $sidebar_template_id ); ?>
+                                        </aside>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="iw-mega-menu__dropdown-buffer" data-dropdown-index="<?php echo esc_attr( $i ); ?>" aria-hidden="true" hidden></div>
+                            <?php else : ?>
+                                <?php if ( $url ) : ?>
+                                    <a class="iw-mega-menu__top-link" href="<?php echo esc_url( $url ); ?>">
+                                        <span class="iw-mega-menu__link-content">
+                                            <?php echo esc_html( $top['item_label'] ); ?>
+                                            <?php if ( ! empty( $top['item_badge'] ) ) : ?>
+                                                <span class="iw-mega-menu__badge"><?php echo esc_html( $top['item_badge'] ); ?></span>
+                                            <?php endif; ?>
+                                        </span>
+                                    </a>
+                                <?php else : ?>
+                                    <button class="iw-mega-menu__top-link" type="button">
+                                        <span class="iw-mega-menu__link-content">
+                                            <?php echo esc_html( $top['item_label'] ); ?>
+                                            <?php if ( ! empty( $top['item_badge'] ) ) : ?>
+                                                <span class="iw-mega-menu__badge"><?php echo esc_html( $top['item_badge'] ); ?></span>
+                                            <?php endif; ?>
+                                        </span>
+                                    </button>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </nav>
+
+            <!-- Accessible Mobile Toggle Button -->
+            <button class="iw-mega-menu__mobile-toggle" type="button" aria-label="<?php echo esc_attr__( 'Open menu', 'iw-mega-menu' ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $mobile_panel_id ); ?>">&#9776;</button>
+
+            <!-- Accessible Mobile Modal Panel Drawer -->
+            <nav class="iw-mega-menu__mobile-panel" id="<?php echo esc_attr( $mobile_panel_id ); ?>" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr__( 'Mobile Navigation', 'iw-mega-menu' ); ?>" hidden tabindex="-1">
+                <div class="iw-mega-menu__mobile-topbar">
+                    <button class="iw-mega-menu__mobile-close" type="button" aria-label="<?php echo esc_attr__( 'Close menu', 'iw-mega-menu' ); ?>">&times;</button>
+                </div>
+                <ul class="iw-mega-menu__mobile-list">
+                    <?php foreach ( $tree as $i => $top ) : 
+                        $has_children = ! empty( $top['children'] );
+                        $top_sublist_id = 'mobile-sublist-' . esc_attr( $this->get_id() ) . '-' . esc_attr( $i );
+                        $url = ! empty( $top['item_link']['url'] ) ? $top['item_link']['url'] : '';
+                    ?>
+                        <li class="iw-mega-menu__mobile-item">
+                            <?php if ( $has_children ) : ?>
+                                <button class="iw-mega-menu__mobile-link" type="button" data-mobile-index="<?php echo esc_attr( $i ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $top_sublist_id ); ?>">
+                                    <span>
+                                        <?php echo esc_html( $top['item_label'] ); ?>
+                                        <?php if ( ! empty( $top['item_badge'] ) ) : ?>
+                                            <span class="iw-mega-menu__badge"><?php echo esc_html( $top['item_badge'] ); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span class="iw-mega-menu__mobile-caret" aria-hidden="true"><i class="fa-regular fa-square-caret-down"></i></span>
+                                </button>
+
+                                <ul class="iw-mega-menu__mobile-sublist" id="<?php echo esc_attr( $top_sublist_id ); ?>" hidden>
+                                    <?php foreach ( $top['children'] as $j => $second ) : 
+                                        $has_third = ! empty( $second['children'] );
+                                        $second_sublist_id = $top_sublist_id . '-' . esc_attr( $j );
+                                        $second_url = ! empty( $second['item_link']['url'] ) ? $second['item_link']['url'] : '';
+                                    ?>
+                                        <li class="iw-mega-menu__mobile-item">
+                                            <?php if ( $has_third ) : ?>
+                                                <button class="iw-mega-menu__mobile-link" type="button" data-mobile-index="<?php echo esc_attr( $i . '-' . $j ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $second_sublist_id ); ?>">
+                                                    <span>
+                                                        <?php echo esc_html( $second['item_label'] ); ?>
+                                                        <?php if ( ! empty( $second['item_badge'] ) ) : ?>
+                                                            <span class="iw-mega-menu__badge"><?php echo esc_html( $second['item_badge'] ); ?></span>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                    <span class="iw-mega-menu__mobile-caret" aria-hidden="true"><i class="fa-regular fa-square-caret-down"></i></span>
+                                                </button>
+
+                                                <ul class="iw-mega-menu__mobile-sublist" id="<?php echo esc_attr( $second_sublist_id ); ?>" hidden>
+                                                    <?php foreach ( $second['children'] as $third ) : 
+                                                        $third_url = ! empty( $third['item_link']['url'] ) ? $third['item_link']['url'] : '#';
+                                                    ?>
+                                                        <li class="iw-mega-menu__mobile-item">
+                                                            <a class="iw-mega-menu__mobile-link" href="<?php echo esc_url( $third_url ); ?>">
+                                                                <span>
+                                                                    <?php echo esc_html( $third['item_label'] ); ?>
+                                                                    <?php if ( ! empty( $third['item_badge'] ) ) : ?>
+                                                                        <span class="iw-mega-menu__badge"><?php echo esc_html( $third['item_badge'] ); ?></span>
+                                                                    <?php endif; ?>
+                                                                </span>
+                                                            </a>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else : ?>
+                                                <a class="iw-mega-menu__mobile-link" href="<?php echo esc_url( $second_url ? $second_url : '#' ); ?>">
+                                                    <span>
+                                                        <?php echo esc_html( $second['item_label'] ); ?>
+                                                        <?php if ( ! empty( $second['item_badge'] ) ) : ?>
+                                                            <span class="iw-mega-menu__badge"><?php echo esc_html( $second['item_badge'] ); ?></span>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                </a>
+                                            <?php endif; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php else : ?>
+                                <a class="iw-mega-menu__mobile-link" href="<?php echo esc_url( $url ? $url : '#' ); ?>">
+                                    <span>
+                                        <?php echo esc_html( $top['item_label'] ); ?>
+                                        <?php if ( ! empty( $top['item_badge'] ) ) : ?>
+                                            <span class="iw-mega-menu__badge"><?php echo esc_html( $top['item_badge'] ); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+
+                <?php if ( ! empty( $global_sidebar_template_id ) ) : ?>
+                    <div class="iw-mega-menu__mobile-sidebar">
+                        <?php echo $this->get_sidebar_template_content( $global_sidebar_template_id ); ?>
+                    </div>
+                <?php endif; ?>
+            </nav>
+        </div>
         <?php
     }
+
+    /**
+     * Marionette / Underscore JS live preview template for Elementor editor
+     */
     protected function content_template() {
         ?>
         <#
         var menu_id = 'iw-mega-menu-' + view.getID();
+        var mobile_panel_id = 'iw-mobile-panel-' + view.getID();
         var items = settings.menu_items || [];
-        var defaultIconColor = '#5a3fa0';
+        var global_sidebar_id = settings.sidebar_template_id || '';
+
         // Build lookup and tree
         var lookup = {}, tree = {};
         _.each(items, function(item, idx) {
             item.children = [];
             lookup[idx] = item;
         });
+
         // Attach third-level to second-level, and second-level to top-level
         _.each(lookup, function(item, idx) {
             if (item.item_type === 'third' && lookup[item.parent_id] && lookup[item.parent_id].item_type === 'second') {
@@ -879,34 +851,29 @@ class IW_Mega_Menu_Widget extends Widget_Base {
                 tree[idx] = item;
             }
         });
+
         function renderIcon(icon, icon_class) {
             if (!icon || !icon.value) return '';
             var iconHTML = elementor.helpers.renderIcon(view, icon, { 'aria-hidden': true }, 'i', 'object');
-            // Always apply a default color class if none is specified
             var iconClass = icon_class ? ' ' + icon_class : ' icon-acc-purple';
             if (iconHTML && iconHTML.value) {
-                return '<span class="iw-mega-menu__icon' + iconClass + '">' + iconHTML.value + '</span>';
+                return '<span class="iw-mega-menu__icon' + iconClass + '" aria-hidden="true">' + iconHTML.value + '</span>';
             }
             return '';
         }
         #>
         <div class="iw-mega-menu-wrapper">
-            <nav class="iw-mega-menu__nav" id="{{ menu_id }}">
+            <nav class="iw-mega-menu__nav" id="{{ menu_id }}" aria-label="<?php esc_attr_e( 'Main Navigation', 'iw-mega-menu' ); ?>">
                 <ul class="iw-mega-menu__top-level">
-                    <# _.each(tree, function(top, i) { #>
+                    <# _.each(tree, function(top, i) { 
+                        var has_dropdown = top.children && top.children.length;
+                        var dropdown_id = menu_id + '-dropdown-' + i;
+                        var sidebar_id = top.sidebar_template_id || global_sidebar_id;
+                        var has_sidebar = sidebar_id && sidebar_id !== '';
+                    #>
                         <li class="iw-mega-menu__top-item">
-                            <# var has_dropdown = top.children && top.children.length; #>
-                            <# if (top.item_link && top.item_link.url) { #>
-                                <a class="iw-mega-menu__top-link" href="{{ top.item_link.url }}" <# if (has_dropdown) { #> aria-haspopup="true" aria-expanded="false" data-dropdown-index="{{ i }}"<# } #>>
-                                    <span class="iw-mega-menu__link-content">
-                                        {{{ top.item_label }}}
-                                        <# if (top.item_badge) { #>
-                                            <span class="iw-mega-menu__badge">{{{ top.item_badge }}}</span>
-                                        <# } #>
-                                    </span>
-                                </a>
-                            <# } else { #>
-                                <button class="iw-mega-menu__top-link" type="button" <# if (has_dropdown) { #> aria-haspopup="true" aria-expanded="false" data-dropdown-index="{{ i }}"<# } #>>
+                            <# if (has_dropdown) { #>
+                                <button class="iw-mega-menu__top-link" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="{{ dropdown_id }}" data-dropdown-index="{{ i }}">
                                     <span class="iw-mega-menu__link-content">
                                         {{{ top.item_label }}}
                                         <# if (top.item_badge) { #>
@@ -914,196 +881,172 @@ class IW_Mega_Menu_Widget extends Widget_Base {
                                         <# } #>
                                     </span>
                                 </button>
+
+                                <div class="iw-mega-menu__dropdown <# if (has_sidebar) { #>iw-mega-menu__dropdown--with-sidebar<# } else { #>iw-mega-menu__dropdown--no-sidebar<# } #>" id="{{ dropdown_id }}" data-dropdown-index="{{ i }}" tabindex="-1" hidden>
+                                    <div class="iw-mega-menu__dropdown-main">
+                                        <# 
+                                        var non_accordion = [], accordion = []; 
+                                        _.each(top.children, function(second) { 
+                                            if (second.is_accordion === 'yes') { 
+                                                accordion.push(second); 
+                                            } else { 
+                                                non_accordion.push(second); 
+                                            } 
+                                        }); 
+                                        #>
+                                        <# if (non_accordion.length) { #>
+                                            <div class="iw-mega-menu__second-list">
+                                                <# 
+                                                var columns = [[], []]; 
+                                                _.each(non_accordion, function(link, idx) { 
+                                                    var col = Math.floor(idx / 4); 
+                                                    if (col < 2) columns[col].push(link); 
+                                                }); 
+                                                #>
+                                                <# for (var c = 0; c < 2; c++) { #>
+                                                    <div class="iw-mega-menu__second-col">
+                                                        <# _.each(columns[c], function(second) { #>
+                                                            <# if (second.item_link && second.item_link.url) { #>
+                                                                <a class="iw-mega-menu__section-label" href="{{ second.item_link.url }}">
+                                                            <# } else { #>
+                                                                <div class="iw-mega-menu__section-label" role="heading" aria-level="3">
+                                                            <# } #>
+                                                                    <span class="iw-mega-menu__link-content">
+                                                                        {{{ renderIcon(second.item_icon, second.item_icon_class) }}}
+                                                                        {{{ second.item_label }}}
+                                                                        <# if (second.item_badge) { #>
+                                                                            <span class="iw-mega-menu__badge">{{{ second.item_badge }}}</span>
+                                                                        <# } #>
+                                                                    </span>
+                                                                    <# if (second.item_description) { #>
+                                                                        <span class="iw-mega-menu__description">{{{ second.item_description }}}</span>
+                                                                    <# } #>
+                                                            <# if (second.item_link && second.item_link.url) { #>
+                                                                </a>
+                                                            <# } else { #>
+                                                                </div>
+                                                            <# } #>
+                                                        <# }); #>
+                                                    </div>
+                                                <# } #>
+                                            </div>
+                                        <# } #>
+
+                                        <# _.each(accordion, function(second, j) { 
+                                            var section_id = dropdown_id + '-section-' + j; 
+                                        #>
+                                            <div class="iw-mega-menu__section iw-mega-menu__accordion">
+                                                <button class="iw-mega-menu__section-label iw-mega-menu__accordion-toggle" type="button" aria-controls="{{ section_id }}" aria-expanded="false">
+                                                    <span class="iw-mega-menu__link-content">
+                                                        {{{ renderIcon(second.item_icon, second.item_icon_class) }}}
+                                                        {{{ second.item_label }}}
+                                                        <# if (second.item_badge) { #>
+                                                            <span class="iw-mega-menu__badge">{{{ second.item_badge }}}</span>
+                                                        <# } #>
+                                                    </span>
+                                                    <# if (second.item_description) { #>
+                                                        <span class="iw-mega-menu__description">{{{ second.item_description }}}</span>
+                                                    <# } #>
+                                                    <span class="iw-mega-menu__caret" aria-hidden="true"><i class="fa-regular fa-square-caret-down"></i></span>
+                                                </button>
+                                                <div class="iw-mega-menu__section-content" id="{{ section_id }}" hidden>
+                                                    <# 
+                                                    var third_links = second.children || []; 
+                                                    var third_columns = [[], [], []]; 
+                                                    _.each(third_links, function(link, idx) { 
+                                                        var col = Math.floor(idx / 2); 
+                                                        if (col < 3) third_columns[col].push(link); 
+                                                    }); 
+                                                    #>
+                                                    <div class="iw-mega-menu__third-list">
+                                                        <# for (var c = 0; c < 3; c++) { #>
+                                                            <div class="iw-mega-menu__third-col">
+                                                                <# _.each(third_columns[c], function(third) { #>
+                                                                    <a class="iw-mega-menu__third-link" href="{{ third.item_link ? third.item_link.url : '#' }}">
+                                                                        <span class="iw-mega-menu__link-content">
+                                                                            {{{ third.item_label }}}
+                                                                            <# if (third.item_badge) { #>
+                                                                                <span class="iw-mega-menu__badge">{{{ third.item_badge }}}</span>
+                                                                            <# } #>
+                                                                        </span>
+                                                                    </a>
+                                                                <# }); #>
+                                                            </div>
+                                                        <# } #>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <# }); #>
+                                    </div>
+                                    <# if (has_sidebar) { #>
+                                        <aside class="iw-mega-menu-sidebar"><?php esc_html_e( 'Sidebar Preview', 'iw-mega-menu' ); ?></aside>
+                                    <# } #>
+                                </div>
+                                <div class="iw-mega-menu__dropdown-buffer" data-dropdown-index="{{ i }}" aria-hidden="true" hidden></div>
+                            <# } else { #>
+                                <# if (top.item_link && top.item_link.url) { #>
+                                    <a class="iw-mega-menu__top-link" href="{{ top.item_link.url }}">
+                                        <span class="iw-mega-menu__link-content">
+                                            {{{ top.item_label }}}
+                                            <# if (top.item_badge) { #>
+                                                <span class="iw-mega-menu__badge">{{{ top.item_badge }}}</span>
+                                            <# } #>
+                                        </span>
+                                    </a>
+                                <# } else { #>
+                                    <button class="iw-mega-menu__top-link" type="button">
+                                        <span class="iw-mega-menu__link-content">
+                                            {{{ top.item_label }}}
+                                            <# if (top.item_badge) { #>
+                                                <span class="iw-mega-menu__badge">{{{ top.item_badge }}}</span>
+                                            <# } #>
+                                        </span>
+                                    </button>
+                                <# } #>
                             <# } #>
                         </li>
                     <# }); #>
                 </ul>
-                <# _.each(tree, function(top, i) { if (!top.children || !top.children.length) return; var dropdown_id = menu_id + '-dropdown-' + i; #>
-                    <# var has_sidebar = top.sidebar_template_id && top.sidebar_template_id !== ''; #>
-                    <div class="iw-mega-menu__dropdown <# if (has_sidebar) { #>iw-mega-menu__dropdown--with-sidebar<# } else { #>iw-mega-menu__dropdown--no-sidebar<# } #>" id="{{ dropdown_id }}" data-dropdown-index="{{ i }}" tabindex="-1" hidden>
-                        <div class="iw-mega-menu__dropdown-main">
-                            <# var non_accordion = [], accordion = []; _.each(top.children, function(second) { if (second.is_accordion === 'yes') { accordion.push(second); } else { non_accordion.push(second); } }); #>
-                            <# if (non_accordion.length) { #>
-                                <div class="iw-mega-menu__second-list">
-                                    <# var columns = [[], []]; _.each(non_accordion, function(link, idx) { var col = Math.floor(idx / 4); if (col < 2) columns[col].push(link); }); #>
-                                    <# for (var c = 0; c < 2; c++) { #>
-                                        <div class="iw-mega-menu__second-col">
-                                            <# _.each(columns[c], function(second) { #>
-                                                <a class="iw-mega-menu__section-label" href="{{ second.item_link.url }}">
-                                                    {{{ renderIcon(second.item_icon, second.item_icon_class) }}}
-                                                    {{{ second.item_label }}}
-                                                    <# if (second.item_badge) { #>
-                                                        <span class="iw-mega-menu__badge">{{{ second.item_badge }}}</span>
-                                                    <# } #>
-                                                </a>
-                                            <# }); #>
-                                        </div>
-                                    <# } #>
-                                </div>
-                            <# } #>
-                            <# _.each(accordion, function(second, j) { var section_id = dropdown_id + '-section-' + j; #>
-                                <div class="iw-mega-menu__section iw-mega-menu__accordion">
-                                    <# if (second.item_icon && second.item_icon.value) { #>
-                                        {{{ renderIcon(second.item_icon, second.item_icon_class) }}}
-                                    <# } #>
-                                    <button class="iw-mega-menu__section-label iw-mega-menu__accordion-toggle" type="button" aria-controls="{{ section_id }}" aria-expanded="false">
-                                        <span class="iw-mega-menu__link-content">
-                                            <# if (second.item_icon && second.item_icon.value) { #>
-                                                {{{ renderIcon(second.item_icon, second.item_icon_class) }}}
-                                            <# } #>
-                                            {{{ second.item_label }}}
-                                            <# if (second.item_badge) { #>
-                                                <span class="iw-mega-menu__badge">{{{ second.item_badge }}}</span>
-                                            <# } #>
-                                        </span>
-                                        <# if (second.item_description) { #>
-                                            <span class="iw-mega-menu__description">{{{ second.item_description }}}</span>
-                                        <# } #>
-                                        <span class="iw-mega-menu__caret" aria-hidden="true"><i class="fa-regular fa-square-caret-down"></i></span>
-                                    </button>
-                                    <div class="iw-mega-menu__section-content" id="{{ section_id }}" hidden>
-                                        <# var third_links = second.children || []; var third_columns = [[], [], []]; _.each(third_links, function(link, idx) { var col = Math.floor(idx / 2); if (col < 3) third_columns[col].push(link); }); #>
-                                        <div class="iw-mega-menu__third-list">
-                                            <# for (var c = 0; c < 3; c++) { #>
-                                                <div class="iw-mega-menu__third-col">
-                                                    <# _.each(third_columns[c], function(third) { #>
-                                                        <a class="iw-mega-menu__third-link" href="{{ third.item_link.url }}">
-                                                            <span class="iw-mega-menu__link-content">
-                                                                {{{ third.item_label }}}
-                                                                <# if (third.item_badge) { #>
-                                                                    <span class="iw-mega-menu__badge">{{{ third.item_badge }}}</span>
-                                                                <# } #>
-                                                            </span>
-                                                        </a>
-                                                    <# }); #>
-                                                </div>
-                                            <# } #>
-                                        </div>
-                                    </div>
-                                </div>
-                            <# }); #>
-                        </div>
-                        <# if (has_sidebar) { #>
-                            <aside class="iw-mega-menu-sidebar">Sidebar Preview</aside>
-                        <# } #>
-                    </div>
-                <# }); #>
             </nav>
         </div>
-        <script>
-        (function($){
-            // Only run this logic in the Elementor editor
-            if (typeof elementorFrontend === 'undefined' || typeof elementorFrontend.hooks === 'undefined') return;
-
-            function logMenuDiagnostics($scope) {
-                var $wrapper = $scope.find('.iw-mega-menu-wrapper');
-                var $nav = $wrapper.find('.iw-mega-menu__nav');
-                var $dropdowns = $nav.find('.iw-mega-menu__dropdown');
-                console.log('[IW MegaMenu] Init diagnostics:');
-                console.log('  $wrapper.length:', $wrapper.length);
-                console.log('  $nav.length:', $nav.length);
-                console.log('  $dropdowns.length:', $dropdowns.length);
-                $dropdowns.each(function(i, el) {
-                    var $el = $(el);
-                    var computed = window.getComputedStyle(el);
-                    console.log('    Dropdown #' + i + ': hidden attr =', el.hasAttribute('hidden'), ', display =', computed.display, ', visibility =', computed.visibility, ', opacity =', computed.opacity);
-                });
-            }
-
-            function forceShowDropdown($dropdown, idx) {
-                $dropdown.removeAttr('hidden');
-                $dropdown.css({ display: 'block', opacity: 1, visibility: 'visible' });
-                console.log('[IW MegaMenu] Forcibly showed dropdown', idx);
-            }
-            function forceHideDropdown($dropdown, idx) {
-                $dropdown.attr('hidden', true);
-                $dropdown.css({ display: 'none', opacity: 0 });
-                console.log('[IW MegaMenu] Forcibly hid dropdown', idx);
-            }
-
-            function initMenu($scope) {
-                var $wrapper = $scope.find('.iw-mega-menu-wrapper');
-                var $nav = $wrapper.find('.iw-mega-menu__nav');
-                if (!$nav.length || !$nav.find('.iw-mega-menu__top-item').length) {
-                    console.log('[IW MegaMenu] Menu not found in scope:', $scope);
-                    return;
-                }
-                var $topItems = $nav.find('.iw-mega-menu__top-item');
-                var $dropdowns = $nav.find('.iw-mega-menu__dropdown');
-                var $accordions = $nav.find('.iw-mega-menu__accordion');
-                // Dropdowns
-                $topItems.each(function() {
-                    var $item = $(this);
-                    var $btn = $item.find('.iw-mega-menu__top-link');
-                    var idx = $btn.data('dropdown-index');
-                    if (idx === undefined) return;
-                    var $dropdown = $nav.find('.iw-mega-menu__dropdown[data-dropdown-index="' + idx + '"]');
-                    $btn.off('mouseenter focus').on('mouseenter focus', function(){
-                        $dropdowns.each(function(i, el) { forceHideDropdown($(el), i); });
-                        forceShowDropdown($dropdown, idx);
-                        $btn.attr('aria-expanded', 'true');
-                        console.log('[IW MegaMenu] Show dropdown', idx);
-                    });
-                    $item.off('mouseleave').on('mouseleave', function(){
-                        forceHideDropdown($dropdown, idx);
-                        $btn.attr('aria-expanded', 'false');
-                        console.log('[IW MegaMenu] Hide dropdown', idx);
-                    });
-                    $btn.off('blur').on('blur', function(e){
-                        if (!$item.has(e.relatedTarget).length) {
-                            forceHideDropdown($dropdown, idx);
-                            $btn.attr('aria-expanded', 'false');
-                            console.log('[IW MegaMenu] Blur/hide dropdown', idx);
-                        }
-                    });
-                });
-                // Accordions
-                $accordions.each(function() {
-                    var $section = $(this);
-                    var $btn = $section.find('.iw-mega-menu__accordion-toggle');
-                    var $content = $section.find('.iw-mega-menu__section-content');
-                    $btn.off('click').on('click', function(){
-                        var isOpen = $btn.attr('aria-expanded') === 'true';
-                        if (isOpen) {
-                            $content.hide();
-                            $btn.attr('aria-expanded', 'false');
-                            $btn.find('.iw-mega-menu__caret i').removeClass('fa-solid fa-square-caret-up').addClass('fa-regular fa-square-caret-down');
-                            console.log('[IW MegaMenu] Accordion closed');
-                        } else {
-                            $content.show();
-                            $btn.attr('aria-expanded', 'true');
-                            $btn.find('.iw-mega-menu__caret i').removeClass('fa-regular fa-square-caret-down').addClass('fa-solid fa-square-caret-up');
-                            console.log('[IW MegaMenu] Accordion opened');
-                        }
-                    });
-                });
-                logMenuDiagnostics($scope);
-            }
-
-            // Elementor frontend/element_ready hook for this widget
-            elementorFrontend.hooks.addAction('frontend/element_ready/iw-mega-menu.default', function($scope){
-                console.log('[IW MegaMenu] element_ready triggered');
-                initMenu($scope);
-            });
-        })(jQuery);
-        </script>
         <?php
     }
+
+    /**
+     * Get saved Elementor templates for sidebar selection (cached)
+     *
+     * @return array Template ID => Title
+     */
     private function get_elementor_templates() {
-        $templates = [];
+        static $templates = null;
+        if ( null !== $templates ) {
+            return $templates;
+        }
+
+        $templates = [ '' => __( 'None', 'iw-mega-menu' ) ];
         $posts = get_posts([
-            'post_type' => 'elementor_library',
+            'post_type'      => 'elementor_library',
             'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'fields'         => 'ids',
         ]);
-        if ( $posts ) {
-            foreach ( $posts as $post ) {
-                $templates[ $post->ID ] = $post->post_title;
+
+        if ( ! empty( $posts ) ) {
+            foreach ( $posts as $post_id ) {
+                $templates[ $post_id ] = get_the_title( $post_id );
             }
         }
         return $templates;
     }
+
+    /**
+     * Render Elementor template content
+     *
+     * @param int $template_id
+     * @return string
+     */
     private function get_sidebar_template_content( $template_id ) {
         if ( ! $template_id ) return '';
         return \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $template_id );
     }
-} 
+}

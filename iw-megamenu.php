@@ -1,151 +1,168 @@
 <?php
-/*
-Plugin Name: IW Mega Menu
-Description: A powerful, Elementor-optimized Mega Menu plugin with multi-level navigation and widget support. Developed for Austin Community College - Instructional Web Projects.
-Version: 1.0.1
-Author: Austin Community College - Instructional Web Projects
-Author URI: https://instruction.austincc.edu
-Text Domain: iw-mega-menu
-Domain Path: /languages
-Requires at least: 5.8
-Requires PHP: 7.4
-*/
+/**
+ * Plugin Name: IW Mega Menu
+ * Description: A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-level navigation and widget support. Developed for Austin Community College - Instructional Web Projects.
+ * Version: 1.1.0
+ * Author: Austin Community College - Instructional Web Projects
+ * Author URI: https://instruction.austincc.edu
+ * Text Domain: iw-mega-menu
+ * Domain Path: /languages
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
+ * Elementor tested up to: 3.25
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+    exit; // Exit if accessed directly.
 }
 
-// Define plugin constants
-define( 'IW_MEGA_MENU_VERSION', '1.0.1' );
-define( 'IW_MEGA_MENU_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'IW_MEGA_MENU_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+// Define Plugin Constants
+define( 'IW_MEGA_MENU_VERSION', '1.1.0' );
+define( 'IW_MEGA_MENU_FILE', __FILE__ );
+define( 'IW_MEGA_MENU_PATH', plugin_dir_path( __FILE__ ) );
+define( 'IW_MEGA_MENU_URL', plugin_dir_url( __FILE__ ) );
 
-function iw_mega_menu_enqueue_styles() {
-    wp_enqueue_style( 'iw-mega-menu', IW_MEGA_MENU_PLUGIN_URL . 'iw-megamenu.css', [], IW_MEGA_MENU_VERSION );
+/**
+ * Main IW Mega Menu Plugin Class
+ */
+final class IW_Mega_Menu {
+
+    /**
+     * Singleton instance
+     *
+     * @var IW_Mega_Menu|null
+     */
+    private static $instance = null;
+
+    /**
+     * Get singleton instance
+     *
+     * @return IW_Mega_Menu
+     */
+    public static function get_instance() {
+        if ( null === self::$instance ) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Constructor
+     */
+    private function __construct() {
+        $this->init_hooks();
+    }
+
+    /**
+     * Initialize WordPress and Elementor hooks
+     */
+    private function init_hooks() {
+        // Load translation text domain
+        add_action( 'init', [ $this, 'load_textdomain' ] );
+
+        // Register frontend assets
+        add_action( 'wp_enqueue_scripts', [ $this, 'register_assets' ] );
+
+        // Elementor widget registration
+        if ( did_action( 'elementor/loaded' ) ) {
+            $this->init_elementor();
+        } else {
+            add_action( 'elementor/loaded', [ $this, 'init_elementor' ] );
+            add_action( 'admin_notices', [ $this, 'admin_notice_missing_elementor' ] );
+        }
+    }
+
+    /**
+     * Load plugin text domain
+     */
+    public function load_textdomain() {
+        load_plugin_textdomain(
+            'iw-mega-menu',
+            false,
+            dirname( plugin_basename( __FILE__ ) ) . '/languages'
+        );
+    }
+
+    /**
+     * Register CSS and JS assets conditionally
+     */
+    public function register_assets() {
+        $css_file = file_exists( IW_MEGA_MENU_PATH . 'assets/css/iw-megamenu.css' )
+            ? IW_MEGA_MENU_URL . 'assets/css/iw-megamenu.css'
+            : IW_MEGA_MENU_URL . 'iw-megamenu.css';
+
+        wp_register_style(
+            'iw-mega-menu',
+            $css_file,
+            [],
+            IW_MEGA_MENU_VERSION
+        );
+
+        wp_register_script(
+            'iw-mega-menu',
+            IW_MEGA_MENU_URL . 'assets/js/iw-megamenu.js',
+            [ 'jquery' ],
+            IW_MEGA_MENU_VERSION,
+            true
+        );
+    }
+
+    /**
+     * Hook into Elementor widget registration
+     */
+    public function init_elementor() {
+        // Modern Elementor 3.5+ widget registration action
+        add_action( 'elementor/widgets/register', [ $this, 'register_widgets' ] );
+
+        // Backward compatibility fallback for older Elementor versions (< 3.5.0)
+        add_action( 'elementor/widgets/widgets_registered', [ $this, 'register_widgets_legacy' ] );
+    }
+
+    /**
+     * Register widgets for Elementor 3.5+
+     *
+     * @param \Elementor\Widgets_Manager $widgets_manager
+     */
+    public function register_widgets( $widgets_manager ) {
+        require_once IW_MEGA_MENU_PATH . 'includes/widgets/class-iw-mega-menu-widget.php';
+        $widgets_manager->register( new \IW_Mega_Menu_Widget() );
+    }
+
+    /**
+     * Register widgets legacy fallback (< 3.5.0)
+     */
+    public function register_widgets_legacy() {
+        if ( did_action( 'elementor/widgets/register' ) ) {
+            return;
+        }
+        require_once IW_MEGA_MENU_PATH . 'includes/widgets/class-iw-mega-menu-widget.php';
+        if ( class_exists( '\Elementor\Plugin' ) && isset( \Elementor\Plugin::instance()->widgets_manager ) ) {
+            \Elementor\Plugin::instance()->widgets_manager->register_widget_type( new \IW_Mega_Menu_Widget() );
+        }
+    }
+
+    /**
+     * Admin notice if Elementor is not installed or activated
+     */
+    public function admin_notice_missing_elementor() {
+        if ( did_action( 'elementor/loaded' ) ) {
+            return;
+        }
+
+        if ( ! current_user_can( 'activate_plugins' ) ) {
+            return;
+        }
+
+        $message = sprintf(
+            /* translators: 1: Plugin Name, 2: Elementor */
+            esc_html__( '"%1$s" requires "%2$s" to be installed and activated.', 'iw-mega-menu' ),
+            '<strong>' . esc_html__( 'IW Mega Menu', 'iw-mega-menu' ) . '</strong>',
+            '<strong>' . esc_html__( 'Elementor', 'iw-mega-menu' ) . '</strong>'
+        );
+
+        printf( '<div class="notice notice-error"><p>%s</p></div>', wp_kses_post( $message ) );
+    }
 }
-add_action( 'wp_enqueue_scripts', 'iw_mega_menu_enqueue_styles' );
 
-// Elementor widget registration
-add_action('elementor/widgets/widgets_registered', function() {
-    // Check Elementor is loaded
-    if ( ! did_action( 'elementor/loaded' ) ) {
-        add_action( 'admin_notices', function() {
-            echo '<div class="notice notice-error"><p>IW Mega Menu requires Elementor to be installed and activated.</p></div>';
-        });
-        return;
-    }
-    require_once IW_MEGA_MENU_PLUGIN_DIR . 'includes/widgets/class-iw-mega-menu-widget.php';
-    \Elementor\Plugin::instance()->widgets_manager->register_widget_type( new \IW_Mega_Menu_Widget() );
-}); 
-
-add_action('wp_head', function() {
-    ?>
-    <style>
-    @media (max-width: 767px) {
-      .iw-mega-menu__nav { display: none !important; }
-      .iw-mega-menu__mobile-panel {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: #fff !important;
-        z-index: 1200 !important;
-        overflow-y: auto !important;
-        max-height: 100vh !important;
-        padding: 0 0 1.5rem 0 !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.10) !important;
-      }
-      .iw-mega-menu__mobile-panel[hidden] {
-        display: none !important;
-      }
-      /* Top bar for close button */
-      .iw-mega-menu__mobile-topbar {
-        width: 100%;
-        background: #2E1A47 !important;
-        padding: 0 1.5rem !important;
-        min-height: 3.5rem !important;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-      }
-      .iw-mega-menu__mobile-close {
-        background: #2E1A47 !important;
-        color: #fff !important;
-        border: none !important;
-        font-size: 2rem !important;
-        cursor: pointer !important;
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 !important;
-        border-radius: 8px !important;
-      }
-      .iw-mega-menu__mobile-list {
-        list-style: none !important;
-        padding: 1.5rem !important;
-        margin: 0 !important;
-      }
-      .iw-mega-menu__mobile-sublist {
-        background: #F3F4F5 !important;
-        list-style: none !important;
-        padding-left: 1.5rem !important;
-        margin: 0 !important;
-        max-height: 60vh !important;
-        overflow-y: auto !important;
-        border-radius: 12px !important;
-      }
-      /* Third-level: nested sublist */
-      .iw-mega-menu__mobile-sublist .iw-mega-menu__mobile-sublist {
-        padding-left: 3rem !important;
-        background: #F3F4F5 !important;
-      }
-      .iw-mega-menu__mobile-item {
-        margin-bottom: 0.5rem !important;
-      }
-      .iw-mega-menu__mobile-link,
-      .iw-mega-menu__mobile-list button,
-      .iw-mega-menu__mobile-sublist button {
-        background: none !important;
-        border: none !important;
-        font-size: 1rem !important;
-        line-height: 1.6rem !important;
-        font-weight: 500 !important;
-        color: #3a2670 !important;
-        text-decoration: none !important;
-        padding: 0.5rem 0 !important;
-        width: 100% !important;
-        cursor: pointer !important;
-        display: flex !important;
-        align-items: center !important;
-        transition: background 0.2s, color 0.2s !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-      .iw-mega-menu__mobile-link:active,
-      .iw-mega-menu__mobile-link:focus,
-      .iw-mega-menu__mobile-list button:active,
-      .iw-mega-menu__mobile-list button:focus,
-      .iw-mega-menu__mobile-sublist button:active,
-      .iw-mega-menu__mobile-sublist button:focus {
-        background: #f5f5fa !important;
-        color: #3a2670 !important;
-        outline: none !important;
-      }
-      .iw-mega-menu__mobile-caret {
-        margin-left: 0.5rem !important;
-        font-size: 1.2rem !important;
-        color: #3a2670 !important;
-      }
-      body.iw-mega-menu-mobile-open,
-      html.iw-mega-menu-mobile-open {
-        overflow: visible !important;
-        position: static !important;
-      }
-    }
-    </style>
-    <?php
-}); 
+// Instantiate plugin
+IW_Mega_Menu::get_instance();
