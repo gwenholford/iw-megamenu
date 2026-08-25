@@ -58,7 +58,7 @@ class IW_Mega_Menu_Widget extends Widget_Base {
             [
                 'label' => __( 'Menu Source', 'iw-mega-menu' ),
                 'type' => \Elementor\Controls_Manager::SELECT,
-                'default' => 'legacy_repeater',
+                'default' => 'saved_menu',
                 'options' => [
                     'saved_menu' => __( 'Saved Menu (Builder)', 'iw-mega-menu' ),
                     'legacy_repeater' => __( 'Legacy Repeater', 'iw-mega-menu' ),
@@ -544,20 +544,27 @@ class IW_Mega_Menu_Widget extends Widget_Base {
         $mobile_panel_id = 'iw-mobile-panel-' . esc_attr( $this->get_id() );
         
         $tree = [];
-        $menu_source = ! empty( $settings['menu_source'] ) ? $settings['menu_source'] : 'legacy_repeater';
+        $menu_source = array_key_exists( 'menu_source', $settings ) && ! empty( $settings['menu_source'] )
+            ? $settings['menu_source']
+            : 'legacy_repeater';
 
         if ( $menu_source === 'saved_menu' && ! empty( $settings['saved_menu_id'] ) ) {
-            $saved_data = get_post_meta( $settings['saved_menu_id'], '_iw_mega_menu_data', true );
-            if ( $saved_data ) {
+            $saved_menu = get_post( absint( $settings['saved_menu_id'] ) );
+            $saved_data = $saved_menu && 'iw_mega_menu' === $saved_menu->post_type
+                ? get_post_meta( $saved_menu->ID, '_iw_mega_menu_data', true )
+                : '';
+            if ( is_string( $saved_data ) && $saved_data ) {
                 $decoded = json_decode( $saved_data, true );
-                if ( ! empty( $decoded['items'] ) ) {
+                if ( is_array( $decoded ) && isset( $decoded['items'] ) && is_array( $decoded['items'] ) ) {
                     $tree = $decoded['items'];
                 }
-                if ( ! empty( $decoded['settings']['global_sidebar_template_id'] ) ) {
+                if ( is_array( $decoded ) && ! empty( $decoded['settings']['global_sidebar_template_id'] ) ) {
                     $global_sidebar_template_id = $decoded['settings']['global_sidebar_template_id'];
                 }
             }
-        } else {
+        }
+
+        if ( empty( $tree ) ) {
             $items = isset( $settings['menu_items'] ) && is_array( $settings['menu_items'] ) ? $settings['menu_items'] : [];
 
             // Build menu tree from flat array (3 levels)

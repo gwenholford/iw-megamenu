@@ -3,7 +3,7 @@
 A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-level navigation and widget support. Developed for Austin Community College - Instructional Web Projects.
 
 ## Version
-**1.1.0**
+**2.0.0**
 
 ## Features
 - **Fully Responsive Navigation**: Optimized for Desktop, Tablet, and Mobile devices with dynamic viewport height support (`100dvh`).
@@ -22,6 +22,9 @@ A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-leve
   - Full control over typography, colors, borders, paddings, and item gaps.
   - Built-in ACC brand color presets for icons and badges (`Purple`, `Teal`, `Blue`, `Lime`, `Yellow`, `Orange`, `Red`, etc.).
   - Sidebar template embedding for rich content callouts, forms, and contact cards.
+  - Dedicated WordPress Builder with nested menu editing and a side-by-side live preview.
+  - Reusable saved menus stored as `iw_mega_menu` records and selectable from Elementor.
+  - REST API and JSON import/export for menu persistence, backups, and WordPress menu imports.
 
 ## Menu Structure Limits
 - **Second level:** Up to 4 links per column, 2 columns (excluding accordions)
@@ -46,7 +49,12 @@ A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-leve
 
 ## Changelog
 
-### v1.1.0 (Current Release)
+### v2.0.0 (Current Release)
+- Added the dedicated IW Mega Menu Builder admin dashboard.
+- Added reusable saved menus with Elementor widget selection and legacy repeater fallback.
+- Added REST CRUD endpoints, Elementor template lookup, WordPress menu import, and JSON import/export.
+
+### v1.1.0
 #### Major Accessibility & Architecture Modernization
 - **Full WAI-ARIA APG & WCAG 2.2 AA Compliance**:
   - Colocated mega menu dropdowns inside parent `<li>` items, correcting DOM tab order so keyboard users can seamlessly navigate into submenus.

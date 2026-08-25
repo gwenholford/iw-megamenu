@@ -74,6 +74,18 @@ class IW_Mega_Menu_REST {
 			'callback'            => [ $this, 'get_elementor_templates' ],
 			'permission_callback' => [ $this, 'check_permission' ],
 		] );
+
+		register_rest_route( $namespace, '/wp-menus', [
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => [ $this, 'get_wp_menus' ],
+			'permission_callback' => [ $this, 'check_permission' ],
+		] );
+
+		register_rest_route( $namespace, '/wp-menus/(?P<id>\d+)', [
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => [ $this, 'get_wp_menu_tree' ],
+			'permission_callback' => [ $this, 'check_permission' ],
+		] );
 	}
 
 	public function get_menus( $request ) {
@@ -85,13 +97,27 @@ class IW_Mega_Menu_REST {
 
 		$data = [];
 		foreach ( $posts as $post ) {
+			$menu_data = get_post_meta( $post->ID, '_iw_mega_menu_data', true );
+			$menu_data = is_string( $menu_data ) ? json_decode( $menu_data, true ) : [];
 			$data[] = [
-				'id'    => $post->ID,
-				'title' => $post->post_title,
-				'date'  => $post->post_modified,
+				'id'         => $post->ID,
+				'title'      => $post->post_title,
+				'date'       => $post->post_modified,
+				'item_count' => is_array( $menu_data['items'] ?? null ) ? $this->count_items( $menu_data['items'] ) : 0,
 			];
 		}
 		return rest_ensure_response( $data );
+	}
+
+	private function count_items( $items ) {
+		$count = 0;
+		foreach ( $items as $item ) {
+			$count++;
+			if ( is_array( $item['children'] ?? null ) ) {
+				$count += $this->count_items( $item['children'] );
+			}
+		}
+		return $count;
 	}
 
 	public function get_menu( $request ) {
@@ -198,5 +224,76 @@ class IW_Mega_Menu_REST {
 		}
 
 		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * Get all registered WordPress nav menus.
+	 */
+	public function get_wp_menus( $request ) {
+		$menus = wp_get_nav_menus();
+		$data  = [];
+		foreach ( $menus as $menu ) {
+			$data[] = [
+				'id'    => $menu->term_id,
+				'name'  => $menu->name,
+				'count' => $menu->count,
+			];
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * Get a WordPress nav menu's items as a tree compatible with the builder.
+	 */
+	public function get_wp_menu_tree( $request ) {
+		$menu_id = (int) $request['id'];
+		$items   = wp_get_nav_menu_items( $menu_id );
+
+		if ( ! $items ) {
+			return new WP_Error( 'not_found', 'Menu not found or empty', [ 'status' => 404 ] );
+		}
+
+		// Build a flat lookup keyed by menu item ID
+		$flat = [];
+		foreach ( $items as $item ) {
+			$flat[ $item->ID ] = [
+				'id'                  => 'wp_' . $item->ID,
+				'item_label'          => $item->title,
+				'item_link'           => [ 'url' => $item->url ],
+				'item_description'    => $item->description ?: '',
+				'item_badge'          => '',
+				'item_icon'           => [ 'value' => '', 'library' => '' ],
+				'item_icon_class'     => 'icon-acc-purple',
+				'item_type'           => 'top', // will be overridden below
+				'is_accordion'        => 'no',
+				'sidebar_template_id' => '',
+				'children'            => [],
+				'_parent'             => (int) $item->menu_item_parent,
+			];
+		}
+
+		// Build tree and assign depth-based types
+		$tree = [];
+		foreach ( $flat as $id => &$node ) {
+			$parent_id = $node['_parent'];
+			unset( $node['_parent'] );
+
+			if ( $parent_id && isset( $flat[ $parent_id ] ) ) {
+				// Determine depth by checking if parent is already a child
+				$grandparent_type = $flat[ $parent_id ]['item_type'];
+				if ( $grandparent_type === 'top' ) {
+					$node['item_type'] = 'second';
+				} else {
+					$node['item_type'] = 'third';
+				}
+				$flat[ $parent_id ]['children'][] = &$node;
+			} else {
+				$node['item_type'] = 'top';
+				$tree[] = &$node;
+			}
+		}
+		unset( $node );
+
+		return rest_ensure_response( [ 'items' => $tree, 'settings' => [] ] );
 	}
 }

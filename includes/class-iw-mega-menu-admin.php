@@ -42,18 +42,41 @@ class IW_Mega_Menu_Admin {
 			return;
 		}
 
+		$plugin_dir = plugin_dir_path( dirname( __FILE__ ) );
+
+		// Font Awesome for preview icons
+		wp_enqueue_style(
+			'font-awesome-6',
+			'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
+			[],
+			'6.5.1'
+		);
+
 		wp_enqueue_style(
 			'iw-admin-builder-css',
 			plugins_url( 'assets/admin/css/iw-admin-builder.css', dirname( __FILE__ ) ),
+			[ 'font-awesome-6' ],
+			file_exists( $plugin_dir . 'assets/admin/css/iw-admin-builder.css' )
+				? filemtime( $plugin_dir . 'assets/admin/css/iw-admin-builder.css' )
+				: '2.0.0'
+		);
+
+		wp_enqueue_style(
+			'iw-mega-menu',
+			plugins_url( 'assets/css/iw-megamenu.css', dirname( __FILE__ ) ),
 			[],
-			'2.0.0'
+			file_exists( $plugin_dir . 'assets/css/iw-megamenu.css' )
+				? filemtime( $plugin_dir . 'assets/css/iw-megamenu.css' )
+				: '2.0.0'
 		);
 
 		wp_enqueue_script(
 			'iw-admin-builder-js',
 			plugins_url( 'assets/admin/js/iw-admin-builder.js', dirname( __FILE__ ) ),
-			[ 'wp-api-fetch' ], // vanilla js using wp-api-fetch
-			'2.0.0',
+			[ 'wp-api-fetch' ],
+			file_exists( $plugin_dir . 'assets/admin/js/iw-admin-builder.js' )
+				? filemtime( $plugin_dir . 'assets/admin/js/iw-admin-builder.js' )
+				: '2.0.0',
 			true
 		);
 
