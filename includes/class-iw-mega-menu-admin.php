@@ -94,6 +94,9 @@ class IW_Mega_Menu_Admin {
 		<div class="wrap iw-mega-menu-admin-wrap">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'IW Mega Menu Builder', 'iw-megamenu' ); ?></h1>
 			<hr class="wp-header-end">
+			<p class="description">
+				<?php esc_html_e( 'Build multi-level navigation menus with dropdowns, accordions, and sidebar content, then assign the finished menu to the IW Mega Menu widget in Elementor.', 'iw-megamenu' ); ?>
+			</p>
 			<div id="iw-mega-menu-builder-root">
 				<!-- Vanilla JS app will mount here -->
 				<p>Loading builder...</p>

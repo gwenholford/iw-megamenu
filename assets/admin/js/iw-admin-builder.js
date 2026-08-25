@@ -68,6 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.dirty = false;
 			this.expandedItems = new Set();
 			this.editingItemId = null;
+			this.isCreatingMenu = false;
+			this.isImportingWp = false;
+			this.draggedItemId = null;
+
+			window.addEventListener('beforeunload', (e) => {
+				if (this.dirty) {
+					e.preventDefault();
+					e.returnValue = '';
+				}
+			});
 
 			this.init();
 		}
@@ -109,14 +119,18 @@ document.addEventListener('DOMContentLoaded', () => {
 				this.dirty = false;
 				this.expandedItems.clear();
 				this.editingItemId = null;
+				this.isCreatingMenu = false;
+				this.isImportingWp = false;
 				this.render();
 			} catch (e) { console.error('Error loading menu:', e); }
 		}
 
 		// ── CRUD ──
-		async createMenu() {
-			const title = prompt('Enter a name for the new Mega Menu:');
-			if (!title) return;
+		async confirmCreateMenu() {
+			const input = document.getElementById('iw-newmenu-name');
+			const title = input ? input.value.trim() : '';
+			if (!title) { input?.focus(); return; }
+			this.isCreatingMenu = false;
 			this.renderLoading();
 			try {
 				const res = await wp.apiFetch({ path: '/iw-mega-menu/v1/menus', method: 'POST', data: { title, data: { items: [], settings: {} } } });
@@ -146,6 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				this.currentMenuTitle = '';
 				this.currentMenuData = { items: [], settings: {} };
 				this.dirty = false;
+				this.isCreatingMenu = false;
+				this.isImportingWp = false;
 				await this.fetchMenus();
 				this.render();
 			} catch (e) { console.error(e); alert('Delete failed.'); this.render(); }
@@ -206,9 +222,41 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.render();
 		}
 
+		duplicateItem(parentArray, index) {
+			const clone = this.deepCloneWithNewIds(parentArray[index]);
+			clone.item_label = clone.item_label ? clone.item_label + ' (Copy)' : '';
+			parentArray.splice(index + 1, 0, clone);
+			this.editingItemId = clone.id;
+			this.markDirty();
+			this.render();
+		}
+
+		deepCloneWithNewIds(item) {
+			const clone = JSON.parse(JSON.stringify(item));
+			const assign = (node) => {
+				node.id = uid();
+				if (Array.isArray(node.children)) node.children.forEach(assign);
+			};
+			assign(clone);
+			return clone;
+		}
+
+		collectAllIds(items, out) {
+			out = out || [];
+			items.forEach(item => {
+				out.push(item.id);
+				if (item.children && item.children.length) this.collectAllIds(item.children, out);
+			});
+			return out;
+		}
+
 		removeItem(parentArray, index) {
 			const item = parentArray[index];
 			if (!confirm(`Delete "${item.item_label || 'Untitled'}"?`)) return;
+			this.collectAllIds([item]).forEach(id => {
+				this.expandedItems.delete(id);
+				if (this.editingItemId === id) this.editingItemId = null;
+			});
 			parentArray.splice(index, 1);
 			this.markDirty();
 			this.render();
@@ -218,6 +266,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			const newIndex = index + direction;
 			if (newIndex < 0 || newIndex >= parentArray.length) return;
 			[parentArray[index], parentArray[newIndex]] = [parentArray[newIndex], parentArray[index]];
+			this.markDirty();
+			this.render();
+		}
+
+		reorderWithinArray(array, draggedId, targetId, insertAfter) {
+			const fromIndex = array.findIndex(it => it.id === draggedId);
+			if (fromIndex === -1 || array.findIndex(it => it.id === targetId) === -1) return;
+			const [moved] = array.splice(fromIndex, 1);
+			const toIndex = array.findIndex(it => it.id === targetId);
+			array.splice(insertAfter ? toIndex + 1 : toIndex, 0, moved);
 			this.markDirty();
 			this.render();
 		}
@@ -249,11 +307,33 @@ document.addEventListener('DOMContentLoaded', () => {
 					</div>
 				</div>
 
+				${this.isCreatingMenu ? `
+				<div class="iw-builder-inline-bar" id="iw-newmenu-bar">
+					<label for="iw-newmenu-name">New Menu Name:</label>
+					<input type="text" id="iw-newmenu-name" placeholder="e.g. Main Navigation" />
+					<button class="button button-primary iw-btn-sm" id="iw-newmenu-confirm">Create</button>
+					<button class="button iw-btn-sm" id="iw-newmenu-cancel">Cancel</button>
+				</div>` : ''}
+
+				${this.isImportingWp ? `
+				<div class="iw-builder-inline-bar" id="iw-importwp-bar">
+					<label for="iw-importwp-select">Import From:</label>
+					<select id="iw-importwp-select">
+						${this.wpMenus.map(m => `<option value="${m.id}">${esc(m.name)} (${m.count} items)</option>`).join('')}
+					</select>
+					<button class="button button-primary iw-btn-sm" id="iw-importwp-confirm">Import</button>
+					<button class="button iw-btn-sm" id="iw-importwp-cancel">Cancel</button>
+				</div>` : ''}
+
 				${this.currentMenuId ? `
 				<div class="iw-builder-title-bar">
 					<label>Menu Name:</label>
 					<input type="text" id="iw-menu-title" value="${esc(this.currentMenuTitle)}" />
 				</div>
+				<p class="iw-hint iw-hint--tips">
+					<span class="dashicons dashicons-lightbulb" aria-hidden="true"></span>
+					Sections support up to 2 columns of 4 links each. Turn a section into an <strong>Accordion</strong> to nest Third-level links in up to 3 columns. Drag the <span class="dashicons dashicons-menu" aria-hidden="true"></span> handle to reorder items within a level.
+				</p>
 				` : ''}
 
 				<div class="iw-builder-main">
@@ -266,6 +346,17 @@ document.addEventListener('DOMContentLoaded', () => {
 				</div>
 			`;
 			this.attachEvents();
+
+			if (this.isCreatingMenu) {
+				document.getElementById('iw-newmenu-name')?.focus();
+			}
+			if (this.editingItemId) {
+				const labelInput = document.querySelector(`[data-editor-id="${this.editingItemId}"] [data-field="item_label"]`);
+				if (labelInput) {
+					labelInput.focus();
+					labelInput.select();
+				}
+			}
 		}
 
 		// ── Tree Panel ──
@@ -273,6 +364,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			return `
 				<div class="iw-tree-toolbar">
 					<button class="button button-primary" id="iw-btn-add-top">+ Add Top-Level Item</button>
+					<button class="button" id="iw-btn-expand-all" title="Expand all items"><span class="dashicons dashicons-editor-expand" aria-hidden="true"></span> Expand All</button>
+					<button class="button" id="iw-btn-collapse-all" title="Collapse all items"><span class="dashicons dashicons-editor-contract" aria-hidden="true"></span> Collapse All</button>
 				</div>
 				<div class="iw-tree-list" id="iw-tree-container">
 					${items.length === 0 ? '<p class="iw-hint">No items yet. Click "+ Add Top-Level Item" to get started, or import from an existing WordPress menu.</p>' : ''}
@@ -284,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		renderTreeItem(item, index, parentArray, depth) {
 			const isExpanded = this.expandedItems.has(item.id);
 			const isEditing = this.editingItemId === item.id;
+			const isEmptyLabel = !item.item_label || !item.item_label.trim();
 			const depthClass = `iw-depth-${depth}`;
 			const typeLabels = { top: 'Top', second: '2nd', third: '3rd' };
 			const childType = depth === 0 ? 'second' : 'third';
@@ -294,8 +388,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			<div class="iw-tree-item ${depthClass} ${isExpanded ? 'is-expanded' : ''}" data-item-id="${item.id}">
 				<div class="iw-tree-item-header">
 					<div class="iw-tree-item-left">
+						<span class="iw-drag-handle dashicons dashicons-menu" draggable="true" title="Drag to reorder" aria-hidden="true"></span>
 						<span class="iw-tree-item-type">${typeLabels[item.item_type] || 'Item'}</span>
-						<span class="iw-tree-item-label">${esc(item.item_label) || '<em>Untitled</em>'}</span>
+						<span class="iw-tree-item-label ${isEmptyLabel ? 'is-empty' : ''}">${esc(item.item_label) || '<em>Untitled</em>'}</span>
+						${isEmptyLabel ? `<span class="dashicons dashicons-warning iw-tree-item-warning" title="This item needs a label"></span>` : ''}
 						${item.item_badge ? `<span class="iw-tree-badge">${esc(item.item_badge)}</span>` : ''}
 						${children.length > 0 ? `<span class="iw-tree-child-count">(${children.length})</span>` : ''}
 					</div>
@@ -304,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						<button class="button iw-btn-sm" data-action="move-down" data-index="${index}" title="Move down">↓</button>
 						<button class="button iw-btn-sm" data-action="toggle" data-item-id="${item.id}" title="${isExpanded ? 'Collapse' : 'Expand'}">${isExpanded ? '▼' : '▶'}</button>
 						<button class="button iw-btn-sm" data-action="edit" data-item-id="${item.id}" title="Edit">${isEditing ? '✕' : '✎'}</button>
+						<button class="button iw-btn-sm" data-action="duplicate" data-index="${index}" title="Duplicate">⧉</button>
 						<button class="button iw-btn-sm iw-btn-danger" data-action="remove" data-index="${index}" title="Delete">✕</button>
 					</div>
 				</div>
@@ -324,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const iconColorOptions = Object.entries(ICON_COLORS).map(([cls, info]) =>
 				`<option value="${cls}" ${item.item_icon_class === cls ? 'selected' : ''}>${info.label}</option>`
 			).join('');
+			const iconValue = item.item_icon?.value || '';
 
 			return `
 			<div class="iw-tree-item-editor" data-editor-id="${item.id}">
@@ -346,7 +444,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					</div>
 					<div>
 						<label>Icon Class (FA)</label>
-						<input type="text" data-field="item_icon_value" value="${esc(item.item_icon?.value || '')}" placeholder="e.g. fas fa-star" />
+						<div class="iw-icon-input-row">
+							<input type="text" data-field="item_icon_value" value="${esc(iconValue)}" placeholder="e.g. fas fa-star" />
+							<span class="iw-icon-preview ${esc(item.item_icon_class || 'icon-acc-purple')}" data-icon-preview>${iconValue ? `<i class="${esc(iconValue)}"></i>` : '<span class="iw-icon-preview-empty">—</span>'}</span>
+						</div>
 					</div>
 				</div>
 				<div class="iw-editor-row iw-editor-row--half">
@@ -361,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
 							<option value="no" ${item.is_accordion !== 'yes' ? 'selected' : ''}>No</option>
 							<option value="yes" ${item.is_accordion === 'yes' ? 'selected' : ''}>Yes</option>
 						</select>
+						<p class="iw-field-hint">Nests Third-level links inside a collapsible panel.</p>
 					</div>` : ''}
 					${item.item_type === 'top' ? `
 					<div>
@@ -369,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
 							<option value="">None</option>
 							${sidebarOptions}
 						</select>
+						<p class="iw-field-hint">Shows a saved Elementor template beside this item's dropdown.</p>
 					</div>` : ''}
 				</div>
 			</div>`;
@@ -512,11 +615,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			const select = document.getElementById('iw-menu-select');
 			if (select) select.addEventListener('change', (e) => {
 				if (this.dirty && !confirm('You have unsaved changes. Discard?')) { e.target.value = this.currentMenuId || ''; return; }
+				this.isCreatingMenu = false;
+				this.isImportingWp = false;
 				e.target.value ? this.loadMenu(e.target.value) : (() => { this.currentMenuId = null; this.currentMenuTitle = ''; this.currentMenuData = { items: [], settings: {} }; this.dirty = false; this.render(); })();
 			});
 
 			// Buttons
-			document.getElementById('iw-btn-new')?.addEventListener('click', () => this.createMenu());
+			document.getElementById('iw-btn-new')?.addEventListener('click', () => {
+				this.isCreatingMenu = true;
+				this.isImportingWp = false;
+				this.render();
+			});
 			document.getElementById('iw-btn-delete')?.addEventListener('click', () => this.deleteMenu());
 			document.getElementById('iw-btn-save')?.addEventListener('click', () => this.saveMenu());
 			document.getElementById('iw-btn-desktop')?.addEventListener('click', () => { this.isMobilePreview = false; this.render(); });
@@ -524,20 +633,30 @@ document.addEventListener('DOMContentLoaded', () => {
 			document.getElementById('iw-btn-export')?.addEventListener('click', () => this.exportJson());
 			document.getElementById('iw-btn-import-json')?.addEventListener('click', () => this.importJson());
 
-			// Import WP Menu
+			// Inline "Create Menu" bar
+			document.getElementById('iw-newmenu-confirm')?.addEventListener('click', () => this.confirmCreateMenu());
+			document.getElementById('iw-newmenu-cancel')?.addEventListener('click', () => { this.isCreatingMenu = false; this.render(); });
+			document.getElementById('iw-newmenu-name')?.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') { e.preventDefault(); this.confirmCreateMenu(); }
+				if (e.key === 'Escape') { this.isCreatingMenu = false; this.render(); }
+			});
+
+			// Inline "Import WP Menu" bar
 			document.getElementById('iw-btn-import-wp')?.addEventListener('click', () => {
 				if (this.wpMenus.length === 0) { alert('No WordPress menus found.'); return; }
-				const choice = prompt(
-					'Import from WordPress Menu:\n' +
-					this.wpMenus.map((m, i) => `  ${i + 1}. ${m.name} (${m.count} items)`).join('\n') +
-					'\n\nEnter the number:'
-				);
-				const idx = parseInt(choice, 10) - 1;
-				if (idx >= 0 && idx < this.wpMenus.length) {
-					if (this.currentMenuData.items.length > 0 && !confirm('This will replace existing items. Continue?')) return;
-					this.importWpMenu(this.wpMenus[idx].id);
-				}
+				this.isImportingWp = true;
+				this.isCreatingMenu = false;
+				this.render();
 			});
+			document.getElementById('iw-importwp-confirm')?.addEventListener('click', () => {
+				const wpSelect = document.getElementById('iw-importwp-select');
+				const wpMenuId = wpSelect?.value;
+				this.isImportingWp = false;
+				if (!wpMenuId) { this.render(); return; }
+				if (this.currentMenuData.items.length > 0 && !confirm('This will replace existing items. Continue?')) { this.render(); return; }
+				this.importWpMenu(wpMenuId);
+			});
+			document.getElementById('iw-importwp-cancel')?.addEventListener('click', () => { this.isImportingWp = false; this.render(); });
 
 			// Menu title
 			document.getElementById('iw-menu-title')?.addEventListener('input', (e) => {
@@ -550,15 +669,27 @@ document.addEventListener('DOMContentLoaded', () => {
 				this.addItem(this.currentMenuData.items, 'top');
 			});
 
+			// Expand / Collapse all
+			document.getElementById('iw-btn-expand-all')?.addEventListener('click', () => {
+				this.collectAllIds(this.currentMenuData.items).forEach(id => this.expandedItems.add(id));
+				this.render();
+			});
+			document.getElementById('iw-btn-collapse-all')?.addEventListener('click', () => {
+				this.expandedItems.clear();
+				this.editingItemId = null;
+				this.render();
+			});
+
+			const treeContainer = document.getElementById('iw-tree-container');
+
 			// Tree item actions (delegated)
-			document.getElementById('iw-tree-container')?.addEventListener('click', (e) => {
+			treeContainer?.addEventListener('click', (e) => {
 				const btn = e.target.closest('[data-action]');
 				if (!btn) return;
 				e.stopPropagation();
 
 				const action = btn.dataset.action;
 				const itemId = btn.dataset.itemId;
-				const index = parseInt(btn.dataset.index, 10);
 				const parentId = btn.dataset.parentId;
 				const childType = btn.dataset.childType;
 
@@ -573,29 +704,20 @@ document.addEventListener('DOMContentLoaded', () => {
 						if (this.editingItemId) this.expandedItems.add(itemId);
 						this.render();
 						break;
-					case 'remove': {
-						const treeItem = btn.closest('.iw-tree-item');
-						const treeItemId = treeItem?.dataset.itemId;
-						if (treeItemId) {
-							const parentArr = this.findParentArray(treeItemId, this.currentMenuData.items);
-							if (parentArr) {
-								const idx = parentArr.findIndex(it => it.id === treeItemId);
-								if (idx !== -1) this.removeItem(parentArr, idx);
-							}
-						}
-						break;
-					}
+					case 'remove':
 					case 'move-up':
-					case 'move-down': {
+					case 'move-down':
+					case 'duplicate': {
 						const treeItem = btn.closest('.iw-tree-item');
 						const treeItemId = treeItem?.dataset.itemId;
-						if (treeItemId) {
-							const parentArr = this.findParentArray(treeItemId, this.currentMenuData.items);
-							if (parentArr) {
-								const idx = parentArr.findIndex(it => it.id === treeItemId);
-								if (idx !== -1) this.moveItem(parentArr, idx, action === 'move-up' ? -1 : 1);
-							}
-						}
+						if (!treeItemId) break;
+						const parentArr = this.findParentArray(treeItemId, this.currentMenuData.items);
+						if (!parentArr) break;
+						const idx = parentArr.findIndex(it => it.id === treeItemId);
+						if (idx === -1) break;
+						if (action === 'remove') this.removeItem(parentArr, idx);
+						else if (action === 'duplicate') this.duplicateItem(parentArr, idx);
+						else this.moveItem(parentArr, idx, action === 'move-up' ? -1 : 1);
 						break;
 					}
 					case 'add-child': {
@@ -609,8 +731,17 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			});
 
+			// Escape closes the open item editor
+			treeContainer?.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape' && this.editingItemId && e.target.closest('.iw-tree-item-editor')) {
+					e.stopPropagation();
+					this.editingItemId = null;
+					this.render();
+				}
+			});
+
 			// Editor field changes (delegated)
-			document.getElementById('iw-tree-container')?.addEventListener('input', (e) => {
+			treeContainer?.addEventListener('input', (e) => {
 				const field = e.target.dataset.field;
 				if (!field) return;
 				const editor = e.target.closest('[data-editor-id]');
@@ -634,13 +765,38 @@ document.addEventListener('DOMContentLoaded', () => {
 						break;
 				}
 				this.markDirty();
+
 				// Update the label in the header in real time
-				const headerLabel = e.target.closest('.iw-tree-item')?.querySelector('.iw-tree-item-label');
-				if (field === 'item_label' && headerLabel) headerLabel.innerHTML = esc(e.target.value) || '<em>Untitled</em>';
+				const headerLeft = e.target.closest('.iw-tree-item')?.querySelector('.iw-tree-item-header .iw-tree-item-left');
+				if (field === 'item_label' && headerLeft) {
+					const headerLabel = headerLeft.querySelector('.iw-tree-item-label');
+					const isEmpty = !e.target.value || !e.target.value.trim();
+					if (headerLabel) {
+						headerLabel.innerHTML = esc(e.target.value) || '<em>Untitled</em>';
+						headerLabel.classList.toggle('is-empty', isEmpty);
+					}
+					let warningIcon = headerLeft.querySelector('.iw-tree-item-warning');
+					if (isEmpty && !warningIcon) {
+						warningIcon = document.createElement('span');
+						warningIcon.className = 'dashicons dashicons-warning iw-tree-item-warning';
+						warningIcon.title = 'This item needs a label';
+						headerLabel.insertAdjacentElement('afterend', warningIcon);
+					} else if (!isEmpty && warningIcon) {
+						warningIcon.remove();
+					}
+				}
+
+				// Update the live icon preview
+				if (field === 'item_icon_value') {
+					const preview = editor.querySelector('[data-icon-preview]');
+					if (preview) {
+						preview.innerHTML = e.target.value ? `<i class="${esc(e.target.value)}"></i>` : '<span class="iw-icon-preview-empty">—</span>';
+					}
+				}
 			});
 
 			// Editor select changes (delegated)
-			document.getElementById('iw-tree-container')?.addEventListener('change', (e) => {
+			treeContainer?.addEventListener('change', (e) => {
 				const field = e.target.dataset.field;
 				if (!field) return;
 				const editor = e.target.closest('[data-editor-id]');
@@ -650,11 +806,80 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (!item) return;
 
 				switch (field) {
-					case 'item_icon_class': item.item_icon_class = e.target.value; break;
+					case 'item_icon_class': {
+						item.item_icon_class = e.target.value;
+						const preview = editor.querySelector('[data-icon-preview]');
+						if (preview) preview.className = 'iw-icon-preview ' + e.target.value;
+						break;
+					}
 					case 'is_accordion': item.is_accordion = e.target.value; break;
 					case 'sidebar_template_id': item.sidebar_template_id = e.target.value; break;
 				}
 				this.markDirty();
+			});
+
+			// Drag-and-drop reordering (within the same parent list)
+			treeContainer?.addEventListener('dragstart', (e) => {
+				const handle = e.target.closest('.iw-drag-handle');
+				if (!handle) return;
+				const treeItem = handle.closest('.iw-tree-item');
+				if (!treeItem) return;
+				this.draggedItemId = treeItem.dataset.itemId;
+				e.dataTransfer.effectAllowed = 'move';
+				e.dataTransfer.setData('text/plain', this.draggedItemId);
+				treeItem.classList.add('is-dragging');
+			});
+
+			treeContainer?.addEventListener('dragover', (e) => {
+				if (!this.draggedItemId) return;
+				const header = e.target.closest('.iw-tree-item-header');
+				if (!header) return;
+				const targetItem = header.closest('.iw-tree-item');
+				const targetId = targetItem?.dataset.itemId;
+				header.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-forbidden');
+				if (!targetId || targetId === this.draggedItemId) return;
+
+				const sourceArr = this.findParentArray(this.draggedItemId, this.currentMenuData.items);
+				const targetArr = this.findParentArray(targetId, this.currentMenuData.items);
+				if (sourceArr !== targetArr) {
+					header.classList.add('drag-forbidden');
+					return;
+				}
+				e.preventDefault();
+				e.dataTransfer.dropEffect = 'move';
+				const rect = header.getBoundingClientRect();
+				const isAfter = (e.clientY - rect.top) > rect.height / 2;
+				header.classList.add(isAfter ? 'drag-over-bottom' : 'drag-over-top');
+			});
+
+			treeContainer?.addEventListener('dragleave', (e) => {
+				const header = e.target.closest('.iw-tree-item-header');
+				header?.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-forbidden');
+			});
+
+			treeContainer?.addEventListener('drop', (e) => {
+				const header = e.target.closest('.iw-tree-item-header');
+				if (!header || !this.draggedItemId) return;
+				e.preventDefault();
+				const isAfter = header.classList.contains('drag-over-bottom');
+				header.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-forbidden');
+				const targetItem = header.closest('.iw-tree-item');
+				const targetId = targetItem?.dataset.itemId;
+				const draggedId = this.draggedItemId;
+				this.draggedItemId = null;
+				if (!targetId || targetId === draggedId) return;
+
+				const sourceArr = this.findParentArray(draggedId, this.currentMenuData.items);
+				const targetArr = this.findParentArray(targetId, this.currentMenuData.items);
+				if (!sourceArr || sourceArr !== targetArr) return;
+
+				this.reorderWithinArray(sourceArr, draggedId, targetId, isAfter);
+			});
+
+			treeContainer?.addEventListener('dragend', () => {
+				this.draggedItemId = null;
+				document.querySelectorAll('.iw-tree-item.is-dragging').forEach(el => el.classList.remove('is-dragging'));
+				document.querySelectorAll('.drag-over-top, .drag-over-bottom, .drag-forbidden').forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-forbidden'));
 			});
 
 			this.attachPreviewEvents();

@@ -127,15 +127,78 @@
 
 /* ── Tree Toolbar ── */
 .iw-tree-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
 	margin-bottom: 12px;
 	padding-bottom: 12px;
 	border-bottom: 1px solid #eee;
+}
+
+.iw-tree-toolbar .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	vertical-align: text-bottom;
 }
 
 .iw-hint {
 	color: #787c82;
 	font-style: italic;
 	margin: 20px 0;
+}
+
+.iw-hint--tips {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+	padding: 8px 16px;
+	background: #f0f6fc;
+	border-bottom: 1px solid #dcdcde;
+	color: #1d2327;
+	font-style: normal;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.iw-hint--tips .dashicons-lightbulb {
+	color: #dba617;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+}
+
+.iw-hint--tips .dashicons-menu {
+	font-size: 13px;
+	width: 13px;
+	height: 13px;
+	vertical-align: text-bottom;
+}
+
+/* ── Inline Bars (New Menu / Import WP Menu) ── */
+.iw-builder-inline-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	padding: 10px 16px;
+	background: #fcf9e8;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.iw-builder-inline-bar label {
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.iw-builder-inline-bar input[type="text"],
+.iw-builder-inline-bar select {
+	flex: 1;
+	min-width: 180px;
+	max-width: 320px;
 }
 
 /* ── Tree Items ── */
@@ -194,6 +257,48 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.iw-tree-item-label.is-empty {
+	color: #787c82;
+	font-weight: 400;
+}
+
+.iw-tree-item-warning {
+	color: #dba617 !important;
+	font-size: 15px !important;
+	width: 15px !important;
+	height: 15px !important;
+	flex-shrink: 0;
+}
+
+.iw-drag-handle {
+	cursor: grab;
+	color: #a7aaad;
+	flex-shrink: 0;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+.iw-drag-handle:active {
+	cursor: grabbing;
+}
+
+.iw-tree-item.is-dragging {
+	opacity: 0.4;
+}
+
+.iw-tree-item-header.drag-over-top {
+	box-shadow: inset 0 2px 0 0 #2271b1;
+}
+
+.iw-tree-item-header.drag-over-bottom {
+	box-shadow: inset 0 -2px 0 0 #2271b1;
+}
+
+.iw-tree-item-header.drag-forbidden {
+	cursor: not-allowed;
 }
 
 .iw-tree-badge {
@@ -277,6 +382,40 @@
 
 .iw-editor-row--half > div {
 	flex: 1;
+}
+
+.iw-field-hint {
+	font-size: 11px;
+	color: #787c82;
+	font-style: italic;
+	margin: 4px 0 0;
+}
+
+.iw-icon-input-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.iw-icon-input-row input {
+	flex: 1;
+}
+
+.iw-icon-preview {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	flex-shrink: 0;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+	font-size: 14px;
+}
+
+.iw-icon-preview-empty {
+	color: #c3c4c7;
 }
 
 /* ── Preview Panel: Load frontend mega menu styles ── */
