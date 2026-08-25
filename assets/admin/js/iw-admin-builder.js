@@ -93,14 +93,80 @@ document.addEventListener('DOMContentLoaded', () => {
 			`;
 		}
 
+		async createMenu() {
+			const title = prompt('Enter a name for the new Mega Menu:');
+			if (!title) return;
+
+			this.renderLoading();
+			try {
+				const response = await wp.apiFetch({
+					path: '/iw-mega-menu/v1/menus',
+					method: 'POST',
+					data: { title: title, data: { items: [], settings: {} } }
+				});
+				await this.fetchMenus();
+				this.loadMenu(response.id);
+			} catch (error) {
+				console.error('Error creating menu:', error);
+				alert('Failed to create menu. Check console for details.');
+				this.render();
+			}
+		}
+
+		async saveMenu() {
+			if (!this.currentMenuId) return;
+			
+			const btnSave = document.getElementById('iw-btn-save');
+			if (btnSave) {
+				btnSave.textContent = 'Saving...';
+				btnSave.disabled = true;
+			}
+			
+			try {
+				await wp.apiFetch({
+					path: `/iw-mega-menu/v1/menus/${this.currentMenuId}`,
+					method: 'POST',
+					data: { data: this.currentMenuData }
+				});
+				if (btnSave) {
+					btnSave.textContent = 'Saved!';
+					setTimeout(() => {
+						btnSave.textContent = 'Save Menu';
+						btnSave.disabled = false;
+					}, 2000);
+				}
+			} catch (error) {
+				console.error('Error saving menu:', error);
+				alert('Failed to save menu. Check console for details.');
+				if (btnSave) {
+					btnSave.textContent = 'Save Menu';
+					btnSave.disabled = false;
+				}
+			}
+		}
+
 		attachEvents() {
 			const select = document.getElementById('iw-menu-select');
 			if (select) {
 				select.addEventListener('change', (e) => {
 					if (e.target.value) {
 						this.loadMenu(e.target.value);
+					} else {
+						this.currentMenuId = null;
+						this.currentMenuData = { items: [], settings: {} };
+						this.render();
 					}
 				});
+			}
+
+			const btnNew = document.getElementById('iw-btn-new');
+			if (btnNew) {
+				btnNew.addEventListener('click', () => this.createMenu());
+			}
+
+			const btnSave = document.getElementById('iw-btn-save');
+			if (btnSave) {
+				btnSave.addEventListener('click', () => this.saveMenu());
 			}
 
 			const btnDesktop = document.getElementById('iw-btn-desktop');
