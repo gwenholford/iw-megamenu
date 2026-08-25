@@ -63,6 +63,21 @@
   color: #fff;
 }
 
+/* Top-Level icons/descriptions must stay legible regardless of the selected
+   icon color, since they sit on the (typically dark) nav bar background
+   rather than the white dropdown background the icon color presets assume. */
+.iw-mega-menu__top-link .iw-mega-menu__icon,
+.iw-mega-menu__top-link .iw-mega-menu__icon i,
+.iw-mega-menu__top-link .iw-mega-menu__icon svg {
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+.iw-mega-menu__top-link .iw-mega-menu__description {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.7rem;
+}
+
 /* Accessible Focus Indicators (WCAG 2.4.7 & 2.4.11) */
 .iw-mega-menu__top-link:focus-visible,
 .iw-mega-menu__section-label:focus-visible,

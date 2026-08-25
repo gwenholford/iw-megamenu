@@ -525,6 +525,18 @@
 	font-size: 16px;
 }
 
+/* Top-Level icons/descriptions must stay legible regardless of icon color,
+   since they sit on the dark preview nav bar rather than a white dropdown. */
+.iw-builder-preview-panel .iw-mega-menu__top-link .iw-mega-menu__icon,
+.iw-builder-preview-panel .iw-mega-menu__top-link .iw-mega-menu__icon i {
+	color: #fff !important;
+}
+
+.iw-builder-preview-panel .iw-mega-menu__top-link .iw-mega-menu__description {
+	color: rgba(255, 255, 255, 0.75);
+	font-size: 0.65rem;
+}
+
 .iw-builder-preview-panel .iw-mega-menu__accordion {
 	border-top: 1px solid #eee;
 	padding-top: 8px;

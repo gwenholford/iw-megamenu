@@ -609,11 +609,21 @@ class IW_Mega_Menu_Widget extends Widget_Base {
                             <?php if ( $has_dropdown ) : ?>
                                 <button class="iw-mega-menu__top-link" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="<?php echo esc_attr( $dropdown_id ); ?>" data-dropdown-index="<?php echo esc_attr( $i ); ?>">
                                     <span class="iw-mega-menu__link-content">
+                                        <?php if ( ! empty( $top['item_icon']['value'] ) ) :
+                                            $top_icon_class = ! empty( $top['item_icon_class'] ) ? esc_attr( $top['item_icon_class'] ) : 'icon-acc-purple';
+                                        ?>
+                                            <span class="iw-mega-menu__icon <?php echo $top_icon_class; ?>" aria-hidden="true">
+                                                <?php \Elementor\Icons_Manager::render_icon( $top['item_icon'], [ 'aria-hidden' => 'true' ] ); ?>
+                                            </span>
+                                        <?php endif; ?>
                                         <?php echo esc_html( $top['item_label'] ); ?>
                                         <?php if ( ! empty( $top['item_badge'] ) ) : ?>
                                             <span class="iw-mega-menu__badge"><?php echo esc_html( $top['item_badge'] ); ?></span>
                                         <?php endif; ?>
                                     </span>
+                                    <?php if ( ! empty( $top['item_description'] ) ) : ?>
+                                        <span class="iw-mega-menu__description"><?php echo esc_html( $top['item_description'] ); ?></span>
+                                    <?php endif; ?>
                                 </button>
 
                                 <div class="<?php echo esc_attr( $dropdown_class ); ?>" id="<?php echo esc_attr( $dropdown_id ); ?>" data-dropdown-index="<?php echo esc_attr( $i ); ?>" tabindex="-1" hidden>
@@ -748,23 +758,44 @@ class IW_Mega_Menu_Widget extends Widget_Base {
 
                                 <div class="iw-mega-menu__dropdown-buffer" data-dropdown-index="<?php echo esc_attr( $i ); ?>" aria-hidden="true" hidden></div>
                             <?php else : ?>
+                                <?php
+                                $top_icon_html = '';
+                                if ( ! empty( $top['item_icon']['value'] ) ) {
+                                    $top_icon_class = ! empty( $top['item_icon_class'] ) ? esc_attr( $top['item_icon_class'] ) : 'icon-acc-purple';
+                                    ob_start();
+                                    ?>
+                                    <span class="iw-mega-menu__icon <?php echo $top_icon_class; ?>" aria-hidden="true">
+                                        <?php \Elementor\Icons_Manager::render_icon( $top['item_icon'], [ 'aria-hidden' => 'true' ] ); ?>
+                                    </span>
+                                    <?php
+                                    $top_icon_html = ob_get_clean();
+                                }
+                                ?>
                                 <?php if ( $url ) : ?>
                                     <a class="iw-mega-menu__top-link" href="<?php echo esc_url( $url ); ?>">
                                         <span class="iw-mega-menu__link-content">
+                                            <?php echo $top_icon_html; ?>
                                             <?php echo esc_html( $top['item_label'] ); ?>
                                             <?php if ( ! empty( $top['item_badge'] ) ) : ?>
                                                 <span class="iw-mega-menu__badge"><?php echo esc_html( $top['item_badge'] ); ?></span>
                                             <?php endif; ?>
                                         </span>
+                                        <?php if ( ! empty( $top['item_description'] ) ) : ?>
+                                            <span class="iw-mega-menu__description"><?php echo esc_html( $top['item_description'] ); ?></span>
+                                        <?php endif; ?>
                                     </a>
                                 <?php else : ?>
                                     <button class="iw-mega-menu__top-link" type="button">
                                         <span class="iw-mega-menu__link-content">
+                                            <?php echo $top_icon_html; ?>
                                             <?php echo esc_html( $top['item_label'] ); ?>
                                             <?php if ( ! empty( $top['item_badge'] ) ) : ?>
                                                 <span class="iw-mega-menu__badge"><?php echo esc_html( $top['item_badge'] ); ?></span>
                                             <?php endif; ?>
                                         </span>
+                                        <?php if ( ! empty( $top['item_description'] ) ) : ?>
+                                            <span class="iw-mega-menu__description"><?php echo esc_html( $top['item_description'] ); ?></span>
+                                        <?php endif; ?>
                                     </button>
                                 <?php endif; ?>
                             <?php endif; ?>
@@ -928,11 +959,15 @@ class IW_Mega_Menu_Widget extends Widget_Base {
                             <# if (has_dropdown) { #>
                                 <button class="iw-mega-menu__top-link" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="{{ dropdown_id }}" data-dropdown-index="{{ i }}">
                                     <span class="iw-mega-menu__link-content">
+                                        {{{ renderIcon(top.item_icon, top.item_icon_class) }}}
                                         {{{ top.item_label }}}
                                         <# if (top.item_badge) { #>
                                             <span class="iw-mega-menu__badge">{{{ top.item_badge }}}</span>
                                         <# } #>
                                     </span>
+                                    <# if (top.item_description) { #>
+                                        <span class="iw-mega-menu__description">{{{ top.item_description }}}</span>
+                                    <# } #>
                                 </button>
 
                                 <div class="iw-mega-menu__dropdown <# if (has_sidebar) { #>iw-mega-menu__dropdown--with-sidebar<# } else { #>iw-mega-menu__dropdown--no-sidebar<# } #>" id="{{ dropdown_id }}" data-dropdown-index="{{ i }}" tabindex="-1" hidden>
@@ -1040,20 +1075,28 @@ class IW_Mega_Menu_Widget extends Widget_Base {
                                 <# if (top.item_link && top.item_link.url) { #>
                                     <a class="iw-mega-menu__top-link" href="{{ top.item_link.url }}">
                                         <span class="iw-mega-menu__link-content">
+                                            {{{ renderIcon(top.item_icon, top.item_icon_class) }}}
                                             {{{ top.item_label }}}
                                             <# if (top.item_badge) { #>
                                                 <span class="iw-mega-menu__badge">{{{ top.item_badge }}}</span>
                                             <# } #>
                                         </span>
+                                        <# if (top.item_description) { #>
+                                            <span class="iw-mega-menu__description">{{{ top.item_description }}}</span>
+                                        <# } #>
                                     </a>
                                 <# } else { #>
                                     <button class="iw-mega-menu__top-link" type="button">
                                         <span class="iw-mega-menu__link-content">
+                                            {{{ renderIcon(top.item_icon, top.item_icon_class) }}}
                                             {{{ top.item_label }}}
                                             <# if (top.item_badge) { #>
                                                 <span class="iw-mega-menu__badge">{{{ top.item_badge }}}</span>
                                             <# } #>
                                         </span>
+                                        <# if (top.item_description) { #>
+                                            <span class="iw-mega-menu__description">{{{ top.item_description }}}</span>
+                                        <# } #>
                                     </button>
                                 <# } #>
                             <# } #>

@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				</div>
 				<p class="iw-hint iw-hint--tips">
 					<span class="dashicons dashicons-lightbulb" aria-hidden="true"></span>
-					Sections support up to 2 columns of 4 links each. Turn a section into an <strong>Accordion</strong> to nest Third-level links in up to 3 columns. Drag the <span class="dashicons dashicons-menu" aria-hidden="true"></span> handle to reorder items within a level.
+					Top-Level items and Sections can have an icon, description, and can link directly (add a URL) or open a dropdown (add children). Sections support up to 2 columns of 4 links each; turn one into an <strong>Accordion</strong> to nest simple Third-level links in up to 3 columns. Drag the <span class="dashicons dashicons-menu" aria-hidden="true"></span> handle to reorder items within a level.
 				</p>
 				` : ''}
 
@@ -422,6 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				`<option value="${cls}" ${item.item_icon_class === cls ? 'selected' : ''}>${info.label}</option>`
 			).join('');
 			const iconValue = item.item_icon?.value || '';
+			// Third-level links render as simple label + badge only (see README "Menu Structure Limits") — icon/description fields are hidden there to avoid implying support that doesn't exist.
+			const supportsIconAndDescription = item.item_type !== 'third';
 
 			return `
 			<div class="iw-tree-item-editor" data-editor-id="${item.id}">
@@ -433,28 +435,32 @@ document.addEventListener('DOMContentLoaded', () => {
 					<label>URL</label>
 					<input type="url" data-field="item_link_url" value="${esc(item.item_link?.url || '')}" placeholder="https://..." />
 				</div>
+				${supportsIconAndDescription ? `
 				<div class="iw-editor-row">
 					<label>Description</label>
 					<input type="text" data-field="item_description" value="${esc(item.item_description || '')}" placeholder="Optional description text" />
-				</div>
+				</div>` : ''}
 				<div class="iw-editor-row iw-editor-row--half">
 					<div>
 						<label>Badge</label>
 						<input type="text" data-field="item_badge" value="${esc(item.item_badge || '')}" placeholder="e.g. New!" />
 					</div>
+					${supportsIconAndDescription ? `
 					<div>
 						<label>Icon Class (FA)</label>
 						<div class="iw-icon-input-row">
 							<input type="text" data-field="item_icon_value" value="${esc(iconValue)}" placeholder="e.g. fas fa-star" />
 							<span class="iw-icon-preview ${esc(item.item_icon_class || 'icon-acc-purple')}" data-icon-preview>${iconValue ? `<i class="${esc(iconValue)}"></i>` : '<span class="iw-icon-preview-empty">—</span>'}</span>
 						</div>
-					</div>
+					</div>` : ''}
 				</div>
+				${supportsIconAndDescription || item.item_type === 'second' || item.item_type === 'top' ? `
 				<div class="iw-editor-row iw-editor-row--half">
+					${supportsIconAndDescription ? `
 					<div>
 						<label>Icon Color</label>
 						<select data-field="item_icon_class">${iconColorOptions}</select>
-					</div>
+					</div>` : ''}
 					${item.item_type === 'second' ? `
 					<div>
 						<label>Accordion?</label>
@@ -473,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						</select>
 						<p class="iw-field-hint">Shows a saved Elementor template beside this item's dropdown.</p>
 					</div>` : ''}
-				</div>
+				</div>` : ''}
 			</div>`;
 		}
 
@@ -485,20 +491,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			const topLinks = items.map((top, i) => {
 				const hasDropdown = top.children && top.children.length > 0;
+				const topIconHtml = top.item_icon?.value ? `<span class="iw-mega-menu__icon ${top.item_icon_class || 'icon-acc-purple'}" aria-hidden="true"><i class="${esc(top.item_icon.value)}"></i></span>` : '';
+				const topDescHtml = top.item_description ? `<span class="iw-mega-menu__description">${esc(top.item_description)}</span>` : '';
+				const topLinkContent = `<span class="iw-mega-menu__link-content">
+						${topIconHtml}
+						${esc(top.item_label)}
+						${top.item_badge ? `<span class="iw-mega-menu__badge">${esc(top.item_badge)}</span>` : ''}
+					</span>
+					${topDescHtml}`;
 				return `<li class="iw-mega-menu__top-item">
 					${hasDropdown
-						? `<button class="iw-mega-menu__top-link" type="button" data-preview-top="${i}">
-								<span class="iw-mega-menu__link-content">
-									${esc(top.item_label)}
-									${top.item_badge ? `<span class="iw-mega-menu__badge">${esc(top.item_badge)}</span>` : ''}
-								</span>
-							</button>`
-						: `<a class="iw-mega-menu__top-link" href="${esc(top.item_link?.url || '#')}">
-								<span class="iw-mega-menu__link-content">
-									${esc(top.item_label)}
-									${top.item_badge ? `<span class="iw-mega-menu__badge">${esc(top.item_badge)}</span>` : ''}
-								</span>
-							</a>`
+						? `<button class="iw-mega-menu__top-link" type="button" data-preview-top="${i}">${topLinkContent}</button>`
+						: `<a class="iw-mega-menu__top-link" href="${esc(top.item_link?.url || '#')}">${topLinkContent}</a>`
 					}
 					${hasDropdown ? this.renderPreviewDropdown(top, i) : ''}
 				</li>`;
