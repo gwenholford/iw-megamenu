@@ -129,10 +129,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// ── Utility: escape HTML ──
+	// Escapes quotes as well as angle brackets — these values are interpolated into
+	// attribute positions (value="…", title="…"), where an unescaped " breaks out.
 	function esc(str) {
-		const d = document.createElement('div');
-		d.textContent = str || '';
-		return d.innerHTML;
+		return String(str === null || str === undefined ? '' : str)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
 	}
 
 	// ── Utility: derive the Font Awesome library from a class string ──
@@ -180,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.draggedItemId = null;
 			this.iconPickerOpenFor = null;
 			this.focusLabelForId = null;
-			this.previewOpenIndex = null;
+			this.previewOpenTopId = null;
 			this.previewOpenSectionId = null;
 
 			window.addEventListener('beforeunload', (e) => {
@@ -224,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.editingItemId = null;
 			this.iconPickerOpenFor = null;
 			this.focusLabelForId = null;
-			this.previewOpenIndex = null;
+			this.previewOpenTopId = null;
 			this.previewOpenSectionId = null;
 			this.isCreatingMenu = false;
 			this.isImportingWp = false;
@@ -394,6 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (this.editingItemId === id) this.editingItemId = null;
 				if (this.iconPickerOpenFor === id) this.iconPickerOpenFor = null;
 				if (this.previewOpenSectionId === id) this.previewOpenSectionId = null;
+				if (this.previewOpenTopId === id) this.previewOpenTopId = null;
 			});
 			parentArray.splice(index, 1);
 			this.markDirty();
@@ -430,8 +436,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		// ── Keep the live preview showing whatever is being edited ──
 		syncPreviewToItem(id) {
-			const topIndex = this.findTopIndexForItem(id);
-			if (topIndex !== null) this.previewOpenIndex = topIndex;
+			const topItem = this.findTopItemFor(id);
+			if (topItem) this.previewOpenTopId = topItem.id;
 
 			const item = this.findItem(id, this.currentMenuData.items);
 			if (!item) return;
@@ -443,12 +449,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 
-		findTopIndexForItem(id) {
+		// Returns the top-level ancestor of any item (or the item itself if top-level).
+		findTopItemFor(id) {
 			const items = this.currentMenuData.items || [];
-			for (let i = 0; i < items.length; i++) {
-				if (this.collectAllIds([items[i]]).includes(id)) return i;
-			}
-			return null;
+			return items.find(top => this.collectAllIds([top]).includes(id)) || null;
 		}
 
 		// ── Rendering ──
@@ -732,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				return '<div class="iw-empty-state"><p>Add menu items to see a live preview</p></div>';
 			}
 
-			const topLinks = items.map((top, i) => {
+			const topLinks = items.map((top) => {
 				const hasDropdown = top.children && top.children.length > 0;
 				const topIconHtml = top.item_icon?.value ? `<span class="iw-mega-menu__icon ${top.item_icon_class || 'icon-acc-purple'}" aria-hidden="true"><i class="${esc(top.item_icon.value)}"></i></span>` : '';
 				const topDescHtml = top.item_description ? `<span class="iw-mega-menu__description">${esc(top.item_description)}</span>` : '';
@@ -742,13 +746,13 @@ document.addEventListener('DOMContentLoaded', () => {
 						${top.item_badge ? `<span class="iw-mega-menu__badge">${esc(top.item_badge)}</span>` : ''}
 					</span>
 					${topDescHtml}`;
-				const isOpen = this.previewOpenIndex === i;
+				const isOpen = this.previewOpenTopId === top.id;
 				return `<li class="iw-mega-menu__top-item">
 					${hasDropdown
-						? `<button class="iw-mega-menu__top-link" type="button" data-preview-top="${i}" aria-expanded="${isOpen}">${topLinkContent}</button>`
+						? `<button class="iw-mega-menu__top-link" type="button" data-preview-top="${esc(top.id)}" aria-expanded="${isOpen}">${topLinkContent}</button>`
 						: `<a class="iw-mega-menu__top-link" href="${esc(top.item_link?.url || '#')}">${topLinkContent}</a>`
 					}
-					${hasDropdown ? this.renderPreviewDropdown(top, i, isOpen) : ''}
+					${hasDropdown ? this.renderPreviewDropdown(top, isOpen) : ''}
 				</li>`;
 			}).join('');
 
@@ -762,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				</div>`;
 		}
 
-		renderPreviewDropdown(top, topIndex, isOpen) {
+		renderPreviewDropdown(top, isOpen) {
 			const children = top.children || [];
 			const nonAccordion = children.filter(c => c.is_accordion !== 'yes');
 			const accordion = children.filter(c => c.is_accordion === 'yes');
@@ -819,12 +823,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			}).join('');
 
 			const sidebarClass = hasSidebar ? 'iw-mega-menu__dropdown--with-sidebar' : 'iw-mega-menu__dropdown--no-sidebar';
-			return `<div class="iw-mega-menu__dropdown ${sidebarClass}" data-preview-dropdown="${topIndex}" ${isOpen ? '' : 'hidden'}>
+			return `<div class="iw-mega-menu__dropdown ${sidebarClass}" data-preview-dropdown="${esc(top.id)}" ${isOpen ? '' : 'hidden'}>
 				<div class="iw-mega-menu__dropdown-main">
 					${secondHtml}
 					${accordionHtml}
 				</div>
-				${hasSidebar ? '<aside class="iw-mega-menu-sidebar"><p>Sidebar Template #' + top.sidebar_template_id + '</p></aside>' : ''}
+				${hasSidebar ? `<aside class="iw-mega-menu-sidebar"><p>Sidebar Template #${esc(top.sidebar_template_id)}</p></aside>` : ''}
 			</div>`;
 		}
 
@@ -1237,8 +1241,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			// Open/closed state lives on the instance, so edits never collapse what you were looking at.
 			document.querySelectorAll('[data-preview-top]').forEach(btn => {
 				btn.addEventListener('click', () => {
-					const idx = parseInt(btn.dataset.previewTop, 10);
-					this.previewOpenIndex = this.previewOpenIndex === idx ? null : idx;
+					const topId = btn.dataset.previewTop;
+					this.previewOpenTopId = this.previewOpenTopId === topId ? null : topId;
 					this.updatePreview();
 				});
 			});

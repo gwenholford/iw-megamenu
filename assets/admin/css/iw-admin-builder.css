@@ -631,15 +631,6 @@
 	width: 100%;
 }
 
-.iw-editor-row--half {
-	display: flex;
-	gap: 10px;
-}
-
-.iw-editor-row--half > div {
-	flex: 1;
-}
-
 .iw-field-hint {
 	font-size: 11px;
 	color: #787c82;
