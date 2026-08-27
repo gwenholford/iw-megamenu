@@ -87,6 +87,29 @@ Then either upload that zip (WordPress 5.5+ detects the matching folder and offe
 6. Watch the right-hand live preview — it opens to whatever you're editing and matches how the item will render on the site.
 7. Click **Save Menu**, then drop the **IW Mega Menu** widget onto an Elementor page/header and select your saved menu.
 
+## Migrating a legacy widget to the Builder
+
+Menus built before v2.0.0 live inside the Elementor widget itself (the **Legacy Repeater**), not as a reusable saved menu. To convert one:
+
+1. Open **IW Mega Menu** in the admin and create a new menu (**+ New**).
+2. Click **Import Legacy Widget**. The dropdown lists every Elementor page/template that still has an IW Mega Menu widget with repeater items, showing the item count and the first few labels so you can tell them apart.
+3. Pick one and click **Import**. The flat `parent_id` structure is rebuilt as a proper three-level tree.
+4. Review it in the live preview, then **Save Menu**.
+5. Edit the original page/template in Elementor, set **Menu Source** to *Saved Menu (Builder)*, and select your new menu.
+
+The import **only reads** — the original widget is left untouched, so you can import, compare, and roll back by simply not changing the widget's Menu Source.
+
+Two things the importer normalises rather than copying verbatim:
+
+- **Sections that have links are switched to accordion.** Nested links only render on desktop inside an accordion (see *Menu Structure* above), so importing them any other way would silently hide them.
+- **Items are never duplicated.** The legacy renderer also pushed any item with `parent_id` of `0` into the top level *even when it was already nested under a parent*, so such an item appeared twice. The importer nests it once, under its parent.
+
+Because of these, compare the preview against the live menu before switching a production page over.
+
+## Exporting
+
+**Export** downloads the current builder menu as JSON — useful for backups or moving a menu between sites (pair it with **Import JSON** on the destination). It exports saved builder menus only; to get a legacy widget's items out, import it first using the steps above, then export.
+
 ## Usage — Elementor widget
 1. In the WordPress admin, edit a page or Header Template with Elementor.
 2. Search for **IW Mega Menu** in the Elementor widget panel and drag it into your layout.

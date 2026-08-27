@@ -172,6 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		constructor() {
 			this.menus = [];
 			this.wpMenus = [];
+			this.legacyWidgets = [];
+			this.isImportingLegacy = false;
 			this.currentMenuId = null;
 			this.currentMenuTitle = '';
 			this.currentMenuData = { items: [], settings: {} };
@@ -205,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				this.fetchMenus(),
 				this.fetchTemplates(),
 				this.fetchWpMenus(),
+				this.fetchLegacyWidgets(),
 			]);
 			this.render();
 		}
@@ -224,6 +227,22 @@ document.addEventListener('DOMContentLoaded', () => {
 			catch (e) { console.error('Error fetching WP menus:', e); }
 		}
 
+		async fetchLegacyWidgets() {
+			try { this.legacyWidgets = await wp.apiFetch({ path: '/iw-mega-menu/v1/legacy-widgets' }); }
+			catch (e) { console.error('Error fetching legacy widgets:', e); }
+		}
+
+		async importLegacyWidget(postId, widgetId) {
+			this.renderLoading();
+			try {
+				const res = await wp.apiFetch({ path: `/iw-mega-menu/v1/legacy-widgets/${postId}/${widgetId}` });
+				this.currentMenuData.items = res.items || [];
+				this.dirty = true;
+				this.resetEditorState();
+				this.render();
+			} catch (e) { console.error(e); alert('Import failed.'); this.render(); }
+		}
+
 		resetEditorState() {
 			this.expandedItems.clear();
 			this.editingItemId = null;
@@ -233,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.previewOpenSectionId = null;
 			this.isCreatingMenu = false;
 			this.isImportingWp = false;
+			this.isImportingLegacy = false;
 		}
 
 		async loadMenu(id) {
@@ -473,6 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					<div class="iw-builder-controls">
 						${this.currentMenuId ? `
 							<button class="button" id="iw-btn-import-wp" title="Import from a WordPress menu">Import WP Menu</button>
+							${this.legacyWidgets.length ? `<button class="button" id="iw-btn-import-legacy" title="Import items from an existing Elementor IW Mega Menu widget">Import Legacy Widget${this.legacyWidgets.length > 1 ? ` (${this.legacyWidgets.length})` : ''}</button>` : ''}
 							<button class="button" id="iw-btn-export" title="Export as JSON">Export</button>
 							<button class="button" id="iw-btn-import-json" title="Import from JSON file">Import JSON</button>
 						` : ''}
@@ -498,6 +519,17 @@ document.addEventListener('DOMContentLoaded', () => {
 					</select>
 					<button class="button button-primary iw-btn-sm" id="iw-importwp-confirm">Import</button>
 					<button class="button iw-btn-sm" id="iw-importwp-cancel">Cancel</button>
+				</div>` : ''}
+
+				${this.isImportingLegacy ? `
+				<div class="iw-builder-inline-bar" id="iw-importlegacy-bar">
+					<label for="iw-importlegacy-select">Import From Widget:</label>
+					<select id="iw-importlegacy-select">
+						${this.legacyWidgets.map(w => `<option value="${esc(w.post_id)}|${esc(w.widget_id)}">${esc(w.post_title)} (${esc(w.post_type)}) — ${w.item_count} items${w.preview ? ' — ' + esc(w.preview) + '…' : ''}</option>`).join('')}
+					</select>
+					<button class="button button-primary iw-btn-sm" id="iw-importlegacy-confirm">Import</button>
+					<button class="button iw-btn-sm" id="iw-importlegacy-cancel">Cancel</button>
+					<p class="iw-field-hint iw-inline-bar-hint">Copies the items from an existing Elementor widget that still uses the Legacy Repeater. The widget itself is not modified — switch it to this saved menu once you're happy with the result.</p>
 				</div>` : ''}
 
 				${this.currentMenuId ? `
@@ -929,6 +961,24 @@ document.addEventListener('DOMContentLoaded', () => {
 				this.importWpMenu(wpMenuId);
 			});
 			document.getElementById('iw-importwp-cancel')?.addEventListener('click', () => { this.isImportingWp = false; this.render(); });
+
+			// Inline "Import Legacy Widget" bar
+			document.getElementById('iw-btn-import-legacy')?.addEventListener('click', () => {
+				if (!this.legacyWidgets.length) { alert('No legacy IW Mega Menu widgets found.'); return; }
+				this.isImportingLegacy = true;
+				this.isCreatingMenu = false;
+				this.isImportingWp = false;
+				this.render();
+			});
+			document.getElementById('iw-importlegacy-confirm')?.addEventListener('click', () => {
+				const value = document.getElementById('iw-importlegacy-select')?.value || '';
+				this.isImportingLegacy = false;
+				const sep = value.indexOf('|');
+				if (sep === -1) { this.render(); return; }
+				if (this.currentMenuData.items.length > 0 && !confirm('This will replace existing items. Continue?')) { this.render(); return; }
+				this.importLegacyWidget(value.slice(0, sep), value.slice(sep + 1));
+			});
+			document.getElementById('iw-importlegacy-cancel')?.addEventListener('click', () => { this.isImportingLegacy = false; this.render(); });
 
 			// Menu title
 			document.getElementById('iw-menu-title')?.addEventListener('input', (e) => {

@@ -86,6 +86,20 @@ class IW_Mega_Menu_REST {
 			'callback'            => [ $this, 'get_wp_menu_tree' ],
 			'permission_callback' => [ $this, 'check_permission' ],
 		] );
+
+		// Legacy repeater migration: find IW Mega Menu widgets that still store
+		// their items inline in Elementor, and convert them to builder trees.
+		register_rest_route( $namespace, '/legacy-widgets', [
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => [ $this, 'get_legacy_widgets' ],
+			'permission_callback' => [ $this, 'check_permission' ],
+		] );
+
+		register_rest_route( $namespace, '/legacy-widgets/(?P<post_id>\d+)/(?P<widget_id>[A-Za-z0-9_-]+)', [
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => [ $this, 'get_legacy_widget_tree' ],
+			'permission_callback' => [ $this, 'check_permission' ],
+		] );
 	}
 
 	public function get_menus( $request ) {
@@ -295,5 +309,204 @@ class IW_Mega_Menu_REST {
 		unset( $node );
 
 		return rest_ensure_response( [ 'items' => $tree, 'settings' => [] ] );
+	}
+
+	/**
+	 * List every IW Mega Menu widget that still carries legacy repeater items.
+	 */
+	public function get_legacy_widgets( $request ) {
+		global $wpdb;
+
+		// Broad LIKE first (Elementor's JSON escaping varies); each hit is then
+		// verified properly by decoding the data below.
+		$post_ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT pm.post_id
+				   FROM {$wpdb->postmeta} pm
+				   INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+				  WHERE pm.meta_key = '_elementor_data'
+				    AND pm.meta_value LIKE %s
+				    AND p.post_type != 'revision'
+				    AND p.post_status IN ( 'publish', 'draft', 'private', 'pending' )
+				  LIMIT 300",
+				'%' . $wpdb->esc_like( 'iw-mega-menu' ) . '%'
+			)
+		);
+
+		$found = [];
+		foreach ( $post_ids as $post_id ) {
+			foreach ( $this->find_legacy_widgets_in_post( (int) $post_id ) as $widget ) {
+				$items = isset( $widget['settings']['menu_items'] ) && is_array( $widget['settings']['menu_items'] )
+					? $widget['settings']['menu_items']
+					: [];
+
+				if ( empty( $items ) ) {
+					continue; // Already migrated, or never populated.
+				}
+
+				$labels = [];
+				foreach ( array_slice( $items, 0, 3 ) as $item ) {
+					if ( ! empty( $item['item_label'] ) ) {
+						$labels[] = $item['item_label'];
+					}
+				}
+
+				$found[] = [
+					'post_id'    => (int) $post_id,
+					'post_title' => get_the_title( $post_id ) ? get_the_title( $post_id ) : sprintf( '#%d', $post_id ),
+					'post_type'  => get_post_type( $post_id ),
+					'widget_id'  => $widget['id'],
+					'item_count' => count( $items ),
+					'preview'    => implode( ', ', $labels ),
+				];
+			}
+		}
+
+		return rest_ensure_response( $found );
+	}
+
+	/**
+	 * Convert one legacy widget's repeater items into a builder-shaped tree.
+	 */
+	public function get_legacy_widget_tree( $request ) {
+		$post_id   = (int) $request['post_id'];
+		$widget_id = (string) $request['widget_id'];
+
+		foreach ( $this->find_legacy_widgets_in_post( $post_id ) as $widget ) {
+			if ( $widget['id'] !== $widget_id ) {
+				continue;
+			}
+
+			$items = isset( $widget['settings']['menu_items'] ) && is_array( $widget['settings']['menu_items'] )
+				? $widget['settings']['menu_items']
+				: [];
+
+			return rest_ensure_response( [
+				'items'    => $this->convert_legacy_items( $items ),
+				'settings' => [],
+			] );
+		}
+
+		return new WP_Error( 'not_found', 'Legacy widget not found', [ 'status' => 404 ] );
+	}
+
+	/**
+	 * Decode a post's Elementor data and return every iw-mega-menu widget in it.
+	 */
+	private function find_legacy_widgets_in_post( $post_id ) {
+		$raw = get_post_meta( $post_id, '_elementor_data', true );
+
+		if ( is_string( $raw ) ) {
+			$raw = json_decode( $raw, true );
+		}
+
+		if ( ! is_array( $raw ) ) {
+			return [];
+		}
+
+		$out = [];
+		$this->collect_legacy_widgets( $raw, $out );
+
+		return $out;
+	}
+
+	/**
+	 * Walk Elementor's nested element tree collecting our widgets.
+	 */
+	private function collect_legacy_widgets( $elements, &$out ) {
+		foreach ( $elements as $element ) {
+			if ( ! is_array( $element ) ) {
+				continue;
+			}
+
+			if ( isset( $element['widgetType'] ) && 'iw-mega-menu' === $element['widgetType'] ) {
+				$out[] = [
+					'id'       => isset( $element['id'] ) ? (string) $element['id'] : '',
+					'settings' => isset( $element['settings'] ) && is_array( $element['settings'] ) ? $element['settings'] : [],
+				];
+			}
+
+			if ( ! empty( $element['elements'] ) && is_array( $element['elements'] ) ) {
+				$this->collect_legacy_widgets( $element['elements'], $out );
+			}
+		}
+	}
+
+	/**
+	 * Flat repeater (parent_id = array index) -> nested builder tree.
+	 *
+	 * Mirrors the parent/child pairing in IW_Mega_Menu_Widget::render() so an
+	 * import reproduces what the widget was rendering. One deliberate difference:
+	 * the widget also pushes any item with parent_id 0 into the root list even
+	 * when it was already attached to a parent, so such an item renders twice.
+	 * Importing that duplicate would be surprising, so an item that finds a
+	 * parent is nested there only.
+	 */
+	private function convert_legacy_items( $items ) {
+		$items = array_values( $items );
+		$nodes = [];
+
+		foreach ( $items as $idx => $item ) {
+			$type = ! empty( $item['item_type'] ) ? $item['item_type'] : 'top';
+
+			$nodes[ $idx ] = [
+				'id'                  => 'legacy_' . $idx . '_' . substr( md5( (string) wp_json_encode( $item ) . $idx ), 0, 8 ),
+				'item_label'          => isset( $item['item_label'] ) ? (string) $item['item_label'] : '',
+				'item_link'           => [ 'url' => isset( $item['item_link']['url'] ) ? (string) $item['item_link']['url'] : '' ],
+				'item_description'    => isset( $item['item_description'] ) ? (string) $item['item_description'] : '',
+				'item_badge'          => isset( $item['item_badge'] ) ? (string) $item['item_badge'] : '',
+				'item_icon'           => [
+					'value'   => isset( $item['item_icon']['value'] ) ? $item['item_icon']['value'] : '',
+					'library' => isset( $item['item_icon']['library'] ) ? $item['item_icon']['library'] : '',
+				],
+				'item_icon_class'     => ! empty( $item['item_icon_class'] ) ? $item['item_icon_class'] : 'icon-acc-purple',
+				'item_type'           => $type,
+				'is_accordion'        => ( isset( $item['is_accordion'] ) && 'yes' === $item['is_accordion'] ) ? 'yes' : 'no',
+				'sidebar_template_id' => isset( $item['sidebar_template_id'] ) ? (string) $item['sidebar_template_id'] : '',
+				'children'            => [],
+			];
+		}
+
+		// Pass 1: work out who nests under whom, by index.
+		$children_of = [];
+		$roots       = [];
+
+		foreach ( $nodes as $idx => $node ) {
+			$parent = isset( $items[ $idx ]['parent_id'] ) ? (int) $items[ $idx ]['parent_id'] : 0;
+			$type   = $node['item_type'];
+
+			$has_parent = $parent !== $idx && isset( $nodes[ $parent ] );
+
+			if ( $has_parent && 'third' === $type && 'second' === $nodes[ $parent ]['item_type'] ) {
+				$children_of[ $parent ][] = $idx;
+			} elseif ( $has_parent && 'second' === $type && 'top' === $nodes[ $parent ]['item_type'] ) {
+				$children_of[ $parent ][] = $idx;
+			} else {
+				$roots[] = $idx;
+			}
+		}
+
+		// Pass 2: materialise the nested structure depth-first.
+		$build = function ( $idx ) use ( &$build, &$nodes, $children_of ) {
+			$node = $nodes[ $idx ];
+			if ( ! empty( $children_of[ $idx ] ) ) {
+				foreach ( $children_of[ $idx ] as $child_idx ) {
+					$node['children'][] = $build( $child_idx );
+				}
+			}
+			// A section with links only renders them as an accordion, so make that
+			// explicit rather than importing links that would silently not display.
+			if ( 'second' === $node['item_type'] && ! empty( $node['children'] ) ) {
+				$node['is_accordion'] = 'yes';
+			}
+			return $node;
+		};
+
+		$tree = [];
+		foreach ( $roots as $idx ) {
+			$tree[] = $build( $idx );
+		}
+
+		return $tree;
 	}
 }
