@@ -84,8 +84,24 @@ class IW_Mega_Menu_Widget extends Widget_Base {
             'menu_items', [
                 'label' => __( 'Menu Items', 'iw-mega-menu' ),
                 'type' => Controls_Manager::REPEATER,
-                'condition' => [
-                    'menu_source' => 'legacy_repeater',
+                // Widgets saved before v2.0.0 have no stored menu_source, so Elementor
+                // applies the 'saved_menu' default and a plain condition would hide
+                // their existing items in the editor panel. Showing the repeater
+                // whenever no saved menu is selected covers every pre-2.0.0 instance.
+                'conditions' => [
+                    'relation' => 'or',
+                    'terms' => [
+                        [
+                            'name' => 'menu_source',
+                            'operator' => '===',
+                            'value' => 'legacy_repeater',
+                        ],
+                        [
+                            'name' => 'saved_menu_id',
+                            'operator' => '==',
+                            'value' => '',
+                        ],
+                    ],
                 ],
                 'fields' => [
                     [
