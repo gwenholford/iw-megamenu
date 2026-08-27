@@ -259,8 +259,13 @@
   position: relative;
   cursor: pointer;
   display: flex;
+  /* Must be explicit: this element also carries .iw-mega-menu__section-label,
+     which sets flex-direction: column. Without this the column direction leaks
+     back in and align-items: center centers the title horizontally. */
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-start;
   column-gap: 0.75rem;
 }
 
