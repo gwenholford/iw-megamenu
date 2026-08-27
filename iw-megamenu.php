@@ -5,6 +5,8 @@
  * Version: 2.0.0
  * Author: Austin Community College - Instructional Web Projects
  * Author URI: https://instruction.austincc.edu
+ * Plugin URI: https://github.com/gwenholford/iw-megamenu
+ * Update URI: false
  * Text Domain: iw-mega-menu
  * Domain Path: /languages
  * Requires at least: 5.8
@@ -14,6 +16,20 @@
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
+}
+
+/*
+ * Bail if another copy of this plugin already loaded.
+ *
+ * WordPress identifies a plugin by "folder/main-file.php", so an upload that
+ * lands in a differently-named folder (e.g. iw-megamenu-main/ from a GitHub zip)
+ * is registered as a separate plugin and can be activated alongside the original.
+ * Without this guard the second copy re-declares IW_Mega_Menu and fatals with
+ * "Cannot declare class IW_Mega_Menu, because the name is already in use",
+ * taking down every site the plugin is active on. First copy loaded wins.
+ */
+if ( defined( 'IW_MEGA_MENU_VERSION' ) ) {
+    return;
 }
 
 // Define Plugin Constants

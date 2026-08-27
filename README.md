@@ -53,6 +53,31 @@ Items beyond these counts are not rendered.
 3. Activate the plugin through the WordPress admin dashboard (`Plugins > Installed Plugins`).
 4. Ensure Elementor (v3.5.0 or later recommended) is installed and activated.
 
+## Updating an existing install
+
+> **The folder name is the plugin's identity.** WordPress keys every plugin on `folder-name/main-file.php`. This plugin **must** live in a folder named exactly `iw-megamenu`, so its basename is `iw-megamenu/iw-megamenu.php`.
+
+A GitHub "Download ZIP" produces a folder named `iw-megamenu-main` (or `-<branch>` / `-<commit>`). Uploading that as-is installs a **second, separate plugin** rather than updating the existing one — it appears as a duplicate row in the Plugins list with a different version, and the original stays active.
+
+To package a release correctly:
+
+```bash
+# From the parent directory of the repo, not inside it
+zip -r iw-megamenu.zip iw-megamenu \
+  -x "iw-megamenu/.git/*" "iw-megamenu/.github/*" "iw-megamenu/.claude/*" \
+     "iw-megamenu/.gitignore" "*/.DS_Store"
+```
+
+Verify the zip's top-level folder before uploading — it must be `iw-megamenu/`:
+
+```bash
+unzip -l iw-megamenu.zip | head -5
+```
+
+Then either upload that zip (WordPress 5.5+ detects the matching folder and offers *Replace current with uploaded*), or replace the folder's contents in place over SFTP. Both preserve the plugin's activation state and all saved Elementor widget settings.
+
+**Never activate two copies at once.** They declare the same classes; the bootstrap now bails out early if a second copy loads, but the duplicate should be deleted rather than relied on.
+
 ## Usage — Builder (recommended)
 1. Go to **IW Mega Menu** in the WordPress admin sidebar.
 2. Click **+ New**, name the menu, and click **Create**.
