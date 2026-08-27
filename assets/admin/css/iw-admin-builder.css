@@ -78,13 +78,33 @@
 }
 
 .iw-builder-tree-panel {
-	flex: 0 0 45%;
-	max-width: 45%;
+	flex: 0 0 55%;
+	max-width: 55%;
 	border-right: 1px solid #dcdcde;
 	overflow-y: auto;
 	max-height: 80vh;
 	padding: 16px;
 	background: #fff;
+}
+
+/* Below ~1400px the split pane gets too tight — stack instead. */
+@media (max-width: 1400px) {
+	.iw-builder-main {
+		flex-direction: column;
+	}
+
+	.iw-builder-tree-panel {
+		flex: 1 1 auto;
+		max-width: 100%;
+		border-right: none;
+		border-bottom: 1px solid #dcdcde;
+		max-height: none;
+	}
+
+	.iw-builder-preview-panel {
+		max-height: none;
+		min-height: 240px;
+	}
 }
 
 .iw-builder-preview-panel {
@@ -151,7 +171,7 @@
 
 .iw-hint--tips {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	gap: 6px;
 	margin: 0;
 	padding: 8px 16px;
@@ -169,13 +189,6 @@
 	width: 16px;
 	height: 16px;
 	flex-shrink: 0;
-}
-
-.iw-hint--tips .dashicons-menu {
-	font-size: 13px;
-	width: 13px;
-	height: 13px;
-	vertical-align: text-bottom;
 }
 
 /* ── Inline Bars (New Menu / Import WP Menu) ── */
@@ -218,6 +231,10 @@
 .iw-depth-1 { border-left: 4px solid #00B2A9; margin-left: 0; }
 .iw-depth-2 { border-left: 4px solid #6787B7; margin-left: 0; }
 
+.iw-tree-item.is-editing {
+	box-shadow: 0 0 0 2px #2271b1;
+}
+
 .iw-tree-item-header {
 	display: flex;
 	justify-content: space-between;
@@ -225,6 +242,11 @@
 	padding: 8px 10px;
 	cursor: pointer;
 	gap: 8px;
+	border-radius: 3px;
+}
+
+.iw-tree-item-header:hover {
+	background: #f6f7f7;
 }
 
 .iw-tree-item-left {
@@ -233,6 +255,39 @@
 	gap: 8px;
 	flex: 1;
 	min-width: 0;
+}
+
+/* ── Expand / collapse chevron ── */
+.iw-tree-expand {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	flex-shrink: 0;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	cursor: pointer;
+	color: #50575e;
+}
+
+.iw-tree-expand:hover {
+	background: #f0f0f1;
+	border-color: #dcdcde;
+}
+
+.iw-tree-expand .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+.iw-tree-expand-spacer {
+	display: inline-block;
+	width: 22px;
+	flex-shrink: 0;
 }
 
 .iw-tree-item-type {
@@ -313,12 +368,104 @@
 .iw-tree-child-count {
 	font-size: 11px;
 	color: #787c82;
+	white-space: nowrap;
+}
+
+/* ── At-a-glance indicators: icon set, description set, URL set ── */
+.iw-tree-meta-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	flex-shrink: 0;
+}
+
+.iw-tree-meta {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px !important;
+	width: 14px !important;
+	height: 14px !important;
+	line-height: 1;
+	color: #a7aaad;
+}
+
+.iw-tree-meta i {
+	font-size: 12px;
+}
+
+/* Warns that a section's nested links will not render on desktop. */
+.iw-tree-warn-pill {
+	font-size: 11px;
+	font-weight: 600;
+	padding: 1px 7px;
+	background: #fcf0e3;
+	color: #8a5700;
+	border: 1px solid #dba617;
+	border-radius: 10px;
+	white-space: nowrap;
+	cursor: help;
 }
 
 .iw-tree-item-actions {
 	display: flex;
-	gap: 3px;
+	align-items: center;
+	gap: 6px;
 	flex-shrink: 0;
+}
+
+.iw-btn-edit {
+	display: inline-flex !important;
+	align-items: center;
+	gap: 3px;
+}
+
+.iw-btn-edit .dashicons {
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
+}
+
+.iw-btn-edit.is-active {
+	background: #f0f0f1 !important;
+}
+
+/* ── Compact borderless icon actions ── */
+.iw-btn-icon-group {
+	display: inline-flex;
+	gap: 1px;
+}
+
+.iw-btn-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	cursor: pointer;
+	color: #787c82;
+}
+
+.iw-btn-icon:hover {
+	background: #f0f0f1;
+	border-color: #dcdcde;
+	color: #1d2327;
+}
+
+.iw-btn-icon .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+.iw-btn-icon--danger:hover {
+	background: #fcecec;
+	border-color: #d63638;
+	color: #d63638;
 }
 
 .iw-btn-sm {
@@ -345,21 +492,130 @@
 	border-top: 1px solid #eee;
 }
 
+.iw-children-empty {
+	margin: 2px 0 8px;
+	padding: 8px 10px;
+	background: #fff;
+	border: 1px dashed #dcdcde;
+	border-radius: 4px;
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.iw-tree-empty {
+	padding: 24px 16px;
+	text-align: center;
+	color: #646970;
+	border: 1px dashed #c3c4c7;
+	border-radius: 4px;
+	background: #fafafa;
+}
+
+.iw-tree-empty p {
+	margin: 0 0 6px;
+}
+
+.iw-tree-empty p:last-child {
+	margin-bottom: 0;
+	font-size: 12px;
+}
+
 .iw-btn-add-child {
-	margin-top: 6px;
-	font-style: italic;
+	display: inline-flex !important;
+	align-items: center;
+	gap: 4px;
+	margin-top: 4px;
 	color: #2271b1 !important;
+	border-style: dashed !important;
+}
+
+.iw-btn-add-child .dashicons {
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
 }
 
 /* ── Item Editor ── */
 .iw-tree-item-editor {
 	padding: 12px;
-	background: #f9f9f9;
-	border-top: 1px solid #eee;
+	background: #f6f7f7;
+	border-top: 1px solid #dcdcde;
+}
+
+.iw-editor-heading {
+	margin: 0 0 10px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #2271b1;
+}
+
+.iw-editor-group {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 12px;
+	margin-bottom: 10px;
+}
+
+.iw-editor-group:last-child {
+	margin-bottom: 0;
+}
+
+.iw-editor-group-title {
+	margin: 0 0 10px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #50575e;
+	border-bottom: 1px solid #f0f0f1;
+	padding-bottom: 6px;
+}
+
+.iw-req {
+	font-size: 10px;
+	font-weight: 400;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	color: #d63638;
+	margin-left: 4px;
+}
+
+/* ── Inline notices inside the editor ── */
+.iw-notice-inline {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 10px 12px;
+	margin-bottom: 10px;
+	border-radius: 4px;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.iw-notice-inline--warn {
+	background: #fcf0e3;
+	border: 1px solid #dba617;
+	color: #4a3200;
+}
+
+.iw-notice-inline .dashicons {
+	color: #dba617;
+	font-size: 17px;
+	width: 17px;
+	height: 17px;
+	flex-shrink: 0;
 }
 
 .iw-editor-row {
 	margin-bottom: 10px;
+}
+
+.iw-editor-row:last-child {
+	margin-bottom: 0;
 }
 
 .iw-editor-row label {
@@ -391,31 +647,140 @@
 	margin: 4px 0 0;
 }
 
-.iw-icon-input-row {
+/* ── Icon field + picker ── */
+.iw-icon-field {
+	margin-bottom: 10px;
+}
+
+.iw-icon-current {
 	display: flex;
 	align-items: center;
 	gap: 6px;
+	flex-wrap: wrap;
 }
 
-.iw-icon-input-row input {
+.iw-icon-current input[type="text"] {
 	flex: 1;
+	min-width: 140px;
+}
+
+.iw-icon-current .iw-btn-sm {
+	display: inline-flex !important;
+	align-items: center;
+	gap: 3px;
+	white-space: nowrap;
+}
+
+.iw-icon-current .dashicons {
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
 }
 
 .iw-icon-preview {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 30px;
-	height: 30px;
+	width: 32px;
+	height: 32px;
 	flex-shrink: 0;
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
 	background: #fff;
-	font-size: 14px;
+	font-size: 15px;
 }
 
 .iw-icon-preview-empty {
 	color: #c3c4c7;
+}
+
+.iw-icon-picker {
+	margin-top: 8px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+	padding: 8px;
+}
+
+.iw-icon-search {
+	width: 100%;
+	margin-bottom: 8px;
+}
+
+.iw-icon-scroll {
+	max-height: 240px;
+	overflow-y: auto;
+}
+
+.iw-icon-group {
+	margin-bottom: 10px;
+}
+
+.iw-icon-group:last-of-type {
+	margin-bottom: 0;
+}
+
+.iw-icon-group[hidden] {
+	display: none;
+}
+
+.iw-icon-group-title {
+	margin: 0 0 5px;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #787c82;
+}
+
+.iw-icon-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+	gap: 4px;
+}
+
+.iw-icon-choice {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 36px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	cursor: pointer;
+	color: #50575e;
+	font-size: 15px;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.iw-icon-choice[hidden] {
+	display: none;
+}
+
+.iw-icon-choice:hover {
+	background: #f0f6fc;
+	border-color: #2271b1;
+	color: #2271b1;
+}
+
+.iw-icon-choice.is-selected {
+	background: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+}
+
+.iw-icon-noresults {
+	margin: 8px 0 0;
+	font-size: 12px;
+	color: #787c82;
+	font-style: italic;
+}
+
+.iw-preview-note {
+	margin: 0;
+	font-size: 11px;
+	color: #787c82;
+	font-style: italic;
 }
 
 /* ── Preview Panel: Load frontend mega menu styles ── */

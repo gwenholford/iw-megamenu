@@ -26,9 +26,26 @@ A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-leve
   - Reusable saved menus stored as `iw_mega_menu` records and selectable from Elementor.
   - REST API and JSON import/export for menu persistence, backups, and WordPress menu imports.
 
-## Menu Structure Limits
-- **Second level:** Up to 4 links per column, 2 columns (excluding accordions)
-- **Third level:** Up to 2 links per column, 3 columns
+## Menu Structure
+
+Menus nest three levels:
+
+| Level | Role | Supports |
+|-------|------|----------|
+| **Top** | Sits on the nav bar. Links directly if given a URL, or opens a dropdown if it has Sections. | Label, URL, description, icon, badge, sidebar template |
+| **Section** | Fills a Top item's dropdown. Either a single link, or an expandable accordion of Links. | Label, URL, description, icon, badge, accordion toggle |
+| **Link** | Nests inside a Section. | Label, URL, badge |
+
+### Important: nested Links require an Accordion
+A Section renders its nested **Links** on desktop **only when "Show nested links" is set to Yes** (the `is_accordion` flag). A Section left as a single link displays its own label/icon/description, and any Links nested under it are not shown on desktop — though they do still appear in the mobile drawer.
+
+The Builder handles this for you: adding a Link to a Section turns "Show nested links" on automatically, and any pre-existing Section with hidden Links is flagged with an **"N hidden"** warning in the tree and an explanation in its editor.
+
+### Layout limits
+- **Sections (non-accordion):** up to 4 per column, 2 columns
+- **Links inside an accordion:** up to 2 per column, 3 columns
+
+Items beyond these counts are not rendered.
 
 ## Installation
 1. Download or clone this repository to your local machine.
@@ -36,7 +53,16 @@ A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-leve
 3. Activate the plugin through the WordPress admin dashboard (`Plugins > Installed Plugins`).
 4. Ensure Elementor (v3.5.0 or later recommended) is installed and activated.
 
-## Usage
+## Usage — Builder (recommended)
+1. Go to **IW Mega Menu** in the WordPress admin sidebar.
+2. Click **+ New**, name the menu, and click **Create**.
+3. Click **+ Add Top-Level Item** to add a nav bar item. Click any row to open its editor.
+4. Expand a row with the chevron, then use **+ Add Section** / **+ Add Link** to nest items beneath it.
+5. In an item's editor, set the Label, Link URL, Description, Badge, and Icon. Click **Browse** beside the Icon field to pick from the built-in icon set, or type any Font Awesome class directly.
+6. Watch the right-hand live preview — it opens to whatever you're editing and matches how the item will render on the site.
+7. Click **Save Menu**, then drop the **IW Mega Menu** widget onto an Elementor page/header and select your saved menu.
+
+## Usage — Elementor widget
 1. In the WordPress admin, edit a page or Header Template with Elementor.
 2. Search for **IW Mega Menu** in the Elementor widget panel and drag it into your layout.
 3. In the **Menu Structure** section, add your menu items:
@@ -53,6 +79,17 @@ A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-leve
 - Added the dedicated IW Mega Menu Builder admin dashboard.
 - Added reusable saved menus with Elementor widget selection and legacy repeater fallback.
 - Added REST CRUD endpoints, Elementor template lookup, WordPress menu import, and JSON import/export.
+
+#### Builder usability & rendering fixes
+- **Top-level items now render their icon and description.** Previously both fields were editable but silently discarded for Top-level items on the frontend, in the Elementor editor preview, and in the Builder preview. Top-level icons and descriptions now render in all three, forced to white/translucent-white so they stay legible on the nav bar.
+- **Nested Links no longer disappear silently.** Links added to a Section only render on desktop when the Section is set to show nested links. Adding a Link now enables that automatically, and Sections with hidden Links are flagged with an "N hidden" warning plus an explanation in the editor.
+- **Added a searchable icon picker** with ~60 curated Font Awesome icons, a live color-accurate preview, and a Remove button — typing raw `fas fa-star` classes is now optional rather than required.
+- Icon and Description fields are hidden for third-level Links, which the frontend renders as label + badge only.
+- Rows show at-a-glance indicators for icon, description, and URL, plus a warning on items missing a label.
+- Click any row to open its editor; expand/collapse moved to a leading chevron and is hidden on items that cannot have children (this also removed a stray empty grey box under expanded third-level Links).
+- The live preview now opens to whatever is being edited and keeps its open dropdown/accordion while you type.
+- Replaced cryptic glyph buttons with labelled/`aria-label`ed Dashicons, added drag-to-reorder, duplicate, expand/collapse all, per-level empty-state guidance, and an unsaved-changes warning.
+- Replaced browser `prompt()` dialogs for creating menus and importing WordPress menus with inline forms.
 
 ### v1.1.0
 #### Major Accessibility & Architecture Modernization

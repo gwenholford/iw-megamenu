@@ -52,10 +52,11 @@ class IW_Mega_Menu_Admin {
 			'6.5.1'
 		);
 
+		// The builder UI uses Dashicons for its controls and Font Awesome for icon previews.
 		wp_enqueue_style(
 			'iw-admin-builder-css',
 			plugins_url( 'assets/admin/css/iw-admin-builder.css', dirname( __FILE__ ) ),
-			[ 'font-awesome-6' ],
+			[ 'dashicons', 'font-awesome-6' ],
 			file_exists( $plugin_dir . 'assets/admin/css/iw-admin-builder.css' )
 				? filemtime( $plugin_dir . 'assets/admin/css/iw-admin-builder.css' )
 				: '2.0.0'
