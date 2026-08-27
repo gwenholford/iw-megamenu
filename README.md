@@ -80,6 +80,11 @@ Items beyond these counts are not rendered.
 - Added reusable saved menus with Elementor widget selection and legacy repeater fallback.
 - Added REST CRUD endpoints, Elementor template lookup, WordPress menu import, and JSON import/export.
 
+#### Color fidelity fixes
+- **Per-item icon colors now survive the widget's global "Icon Color" control.** That control emits a rule targeting `.iw-mega-menu__icon i` directly, while the `icon-acc-*` classes set color on the parent `<span>` — and a direct rule on a child always beats a color inherited from its parent, `!important` or not. The palette classes now also target the nested `i`/`svg`, so each item's chosen accent color wins.
+- **The Builder preview no longer invents its own colors.** It was hand-rolling a second copy of the menu styles that had drifted from the real ones (badges rendered gold instead of brand purple, section labels near-black instead of `#5a3fa0`, third-level links WordPress blue, accordion toggles with no background). The admin stylesheet now scales sizing/spacing only and defers every color to `assets/css/iw-megamenu.css`, which is already enqueued on that page.
+- Tree-row badge indicators recolored to match the real purple badge.
+
 #### Builder usability & rendering fixes
 - **Top-level items now render their icon and description.** Previously both fields were editable but silently discarded for Top-level items on the frontend, in the Elementor editor preview, and in the Builder preview. Top-level icons and descriptions now render in all three, forced to white/translucent-white so they stay legible on the nav bar.
 - **Nested Links no longer disappear silently.** Links added to a Section only render on desktop when the Section is set to show nested links. Adding a Link now enables that automatically, and Sections with hidden Links are flagged with an "N hidden" warning plus an explanation in the editor.

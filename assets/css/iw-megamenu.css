@@ -361,18 +361,23 @@
   pointer-events: auto;
 }
 
-/* Color Palette Utility Classes */
-.icon-acc-purple { color: #4D1979 !important; fill: #4D1979 !important; }
-.icon-acc-purple-dark { color: #2E1A47 !important; fill: #2E1A47 !important; }
-.icon-acc-teal { color: #00B2A9 !important; fill: #00B2A9 !important; }
-.icon-acc-blue-dark { color: #002F6C !important; fill: #002F6C !important; }
-.icon-acc-blue-light { color: #6787B7 !important; fill: #6787B7 !important; }
-.icon-acc-lime { color: #C1D82F !important; fill: #C1D82F !important; }
-.icon-acc-yellow { color: #F0B323 !important; fill: #F0B323 !important; }
-.icon-acc-orange { color: #FA4616 !important; fill: #FA4616 !important; }
-.icon-acc-red { color: #AF272F !important; fill: #AF272F !important; }
-.icon-acc-black { color: #000000 !important; fill: #000000 !important; }
-.icon-acc-grey { color: #8A8C8F !important; fill: #8A8C8F !important; }
+/* Color Palette Utility Classes
+   The nested i/svg selectors are load-bearing: the widget's global "Icon Color"
+   style control emits a rule targeting `.iw-mega-menu__icon i` directly, and a
+   direct rule on the child always beats a color inherited from the parent —
+   even an !important one. Repeating the color on the child keeps each item's
+   own accent color winning over the global control. */
+.icon-acc-purple,      .icon-acc-purple i,      .icon-acc-purple svg      { color: #4D1979 !important; fill: #4D1979 !important; }
+.icon-acc-purple-dark, .icon-acc-purple-dark i, .icon-acc-purple-dark svg { color: #2E1A47 !important; fill: #2E1A47 !important; }
+.icon-acc-teal,        .icon-acc-teal i,        .icon-acc-teal svg        { color: #00B2A9 !important; fill: #00B2A9 !important; }
+.icon-acc-blue-dark,   .icon-acc-blue-dark i,   .icon-acc-blue-dark svg   { color: #002F6C !important; fill: #002F6C !important; }
+.icon-acc-blue-light,  .icon-acc-blue-light i,  .icon-acc-blue-light svg  { color: #6787B7 !important; fill: #6787B7 !important; }
+.icon-acc-lime,        .icon-acc-lime i,        .icon-acc-lime svg        { color: #C1D82F !important; fill: #C1D82F !important; }
+.icon-acc-yellow,      .icon-acc-yellow i,      .icon-acc-yellow svg      { color: #F0B323 !important; fill: #F0B323 !important; }
+.icon-acc-orange,      .icon-acc-orange i,      .icon-acc-orange svg      { color: #FA4616 !important; fill: #FA4616 !important; }
+.icon-acc-red,         .icon-acc-red i,         .icon-acc-red svg         { color: #AF272F !important; fill: #AF272F !important; }
+.icon-acc-black,       .icon-acc-black i,       .icon-acc-black svg       { color: #000000 !important; fill: #000000 !important; }
+.icon-acc-grey,        .icon-acc-grey i,        .icon-acc-grey svg        { color: #8A8C8F !important; fill: #8A8C8F !important; }
 
 /* Hamburger Toggle Button */
 .iw-mega-menu__mobile-toggle {

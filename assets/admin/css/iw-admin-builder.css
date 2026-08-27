@@ -356,10 +356,12 @@
 	cursor: not-allowed;
 }
 
+/* Mirrors the real badge color from assets/css/iw-megamenu.css so the tree row
+   never implies a color the site won't render. */
 .iw-tree-badge {
 	font-size: 11px;
 	padding: 1px 6px;
-	background: #dba617;
+	background: #4D1979;
 	color: #fff;
 	border-radius: 10px;
 	white-space: nowrap;
@@ -839,19 +841,17 @@
 	flex: 1;
 }
 
+/* Colors below are deliberately NOT redeclared — assets/css/iw-megamenu.css is
+   enqueued on this page too, and supplies the real brand colors. Only sizing
+   and spacing are scaled down here for the narrower preview pane. Redeclaring
+   colors here is what caused the preview to drift from the live site. */
 .iw-builder-preview-panel .iw-mega-menu__section-label {
 	display: flex;
 	flex-direction: column;
 	padding: 8px 10px;
 	text-decoration: none;
-	color: #1d2327;
 	border-radius: 6px;
-	transition: background 0.15s;
 	cursor: pointer;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__section-label:hover {
-	background: #f0f0f1;
 }
 
 .iw-builder-preview-panel .iw-mega-menu__link-content {
@@ -864,15 +864,14 @@
 
 .iw-builder-preview-panel .iw-mega-menu__description {
 	font-size: 11px;
-	color: #787c82;
 	margin-top: 2px;
 }
 
 .iw-builder-preview-panel .iw-mega-menu__badge {
 	font-size: 10px;
-	padding: 1px 6px;
-	background: #dba617;
-	color: #fff;
+	min-width: 0;
+	height: auto;
+	padding: 2px 7px;
 	border-radius: 10px;
 	margin-left: 4px;
 }
@@ -900,7 +899,6 @@
 }
 
 .iw-builder-preview-panel .iw-mega-menu__accordion-toggle {
-	background: none;
 	border: none;
 	padding: 8px 10px;
 	width: 100%;
@@ -911,13 +909,8 @@
 	flex-direction: column;
 }
 
-.iw-builder-preview-panel .iw-mega-menu__accordion-toggle:hover {
-	background: #f0f0f1;
-}
-
 .iw-builder-preview-panel .iw-mega-menu__caret {
 	margin-left: auto;
-	color: #787c82;
 }
 
 .iw-builder-preview-panel .iw-mega-menu__section-content {
@@ -938,16 +931,10 @@
 }
 
 .iw-builder-preview-panel .iw-mega-menu__third-link {
-	display: block;
 	padding: 4px 8px;
 	text-decoration: none;
-	color: #2271b1;
 	font-size: 13px;
 	border-radius: 4px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__third-link:hover {
-	background: #f0f0f1;
 }
 
 .iw-builder-preview-panel .iw-mega-menu-sidebar {
@@ -960,15 +947,7 @@
 	font-style: italic;
 }
 
-/* Icon color classes in admin preview */
-.iw-builder-preview-panel .icon-acc-purple { color: #4D1979; }
-.iw-builder-preview-panel .icon-acc-purple-dark { color: #2E1A47; }
-.iw-builder-preview-panel .icon-acc-teal { color: #00B2A9; }
-.iw-builder-preview-panel .icon-acc-blue-dark { color: #002F6C; }
-.iw-builder-preview-panel .icon-acc-blue-light { color: #6787B7; }
-.iw-builder-preview-panel .icon-acc-lime { color: #C1D82F; }
-.iw-builder-preview-panel .icon-acc-yellow { color: #F0B323; }
-.iw-builder-preview-panel .icon-acc-orange { color: #FA4616; }
-.iw-builder-preview-panel .icon-acc-red { color: #AF272F; }
-.iw-builder-preview-panel .icon-acc-black { color: #000000; }
-.iw-builder-preview-panel .icon-acc-grey { color: #8A8C8F; }
+/* Icon accent colors are NOT redeclared here. assets/css/iw-megamenu.css is
+   enqueued on this page and defines .icon-acc-* globally (including the nested
+   i/svg selectors), so the preview, the tree-row indicators, and the editor
+   swatch all pick up the exact same colors the live site uses. */
