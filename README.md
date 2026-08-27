@@ -80,6 +80,11 @@ Items beyond these counts are not rendered.
 - Added reusable saved menus with Elementor widget selection and legacy repeater fallback.
 - Added REST CRUD endpoints, Elementor template lookup, WordPress menu import, and JSON import/export.
 
+#### Accordion header layout
+- **Removed the dead vertical space in accordion headers.** The toggle was `flex-direction: column`, which stacked the caret as a third row *below* the label (`align-self: flex-end` only pushed it right). It is now a wrapping row: label and caret share the first line with the caret vertically centered at the right, and the optional description wraps onto a full-width second line — so the header is compact whether or not a description is set.
+- Caret and description now inherit the toggle's own text color instead of being hardcoded, so both stay legible in the collapsed (dark-on-grey) and expanded (white-on-purple) states. This also fixed a latent contrast bug where an accordion description rendered `#333` on the purple expanded background.
+- The caret keeps a consistent `fa-regular` weight in both states and flips direction only; it previously switched to `fa-solid` when open, which rendered as a heavy filled block rather than a caret.
+
 #### Color fidelity fixes
 - **Per-item icon colors now survive the widget's global "Icon Color" control.** That control emits a rule targeting `.iw-mega-menu__icon i` directly, while the `icon-acc-*` classes set color on the parent `<span>` — and a direct rule on a child always beats a color inherited from its parent, `!important` or not. The palette classes now also target the nested `i`/`svg`, so each item's chosen accent color wins.
 - **The Builder preview no longer invents its own colors.** It was hand-rolling a second copy of the menu styles that had drifted from the real ones (badges rendered gold instead of brand purple, section labels near-black instead of `#5a3fa0`, third-level links WordPress blue, accordion toggles with no background). The admin stylesheet now scales sizing/spacing only and defers every color to `assets/css/iw-megamenu.css`, which is already enqueued on that page.

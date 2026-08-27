@@ -898,6 +898,8 @@
 	margin-top: 8px;
 }
 
+/* Layout (wrapping row, centered caret) comes from assets/css/iw-megamenu.css —
+   only the preview-scale padding is overridden here. */
 .iw-builder-preview-panel .iw-mega-menu__accordion-toggle {
 	border: none;
 	padding: 8px 10px;
@@ -905,12 +907,6 @@
 	text-align: left;
 	cursor: pointer;
 	border-radius: 6px;
-	display: flex;
-	flex-direction: column;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__caret {
-	margin-left: auto;
 }
 
 .iw-builder-preview-panel .iw-mega-menu__section-content {

@@ -196,6 +196,9 @@
                 var isExpanded = $toggle.attr('aria-expanded') === 'true';
                 var $caret = $toggle.find('.iw-mega-menu__caret i, .iw-mega-menu__mobile-caret i');
 
+                // Keep the same fa-regular weight in both states and flip only the
+                // direction — swapping to fa-solid made the open caret read as a
+                // heavy filled block rather than a caret.
                 if (isExpanded) {
                     $toggle.attr('aria-expanded', 'false');
                     $content.prop('hidden', true).slideUp(200);
@@ -207,8 +210,8 @@
                     $toggle.attr('aria-expanded', 'true');
                     $content.prop('hidden', false).slideDown(200);
                     if ($caret.length) {
-                        $caret.removeClass('fa-regular fa-square-caret-down')
-                              .addClass('fa-solid fa-square-caret-up');
+                        $caret.removeClass('fa-solid fa-square-caret-down fa-caret-down')
+                              .addClass('fa-regular fa-square-caret-up');
                     }
                 }
             });
@@ -341,8 +344,8 @@
                     $btn.attr('aria-expanded', 'true');
                     $sublist.prop('hidden', false).slideDown(200);
                     if ($caret.length) {
-                        $caret.removeClass('fa-regular fa-square-caret-down')
-                              .addClass('fa-solid fa-square-caret-up');
+                        $caret.removeClass('fa-solid fa-square-caret-down')
+                              .addClass('fa-regular fa-square-caret-up');
                     }
                 }
             });
