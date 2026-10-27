@@ -3,7 +3,7 @@
  * Full tree editor with live preview, WP menu import, CRUD operations
  *
  * @package IWMegaMenu
- * @version 3.0.1
+ * @version 3.0.2
  */
 document.addEventListener('DOMContentLoaded', () => {
 	const root = document.getElementById('iw-mega-menu-builder-root');

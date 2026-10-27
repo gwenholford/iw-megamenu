@@ -3,7 +3,7 @@
 An accessible, multi-level mega menu for any WordPress site, styled to the ACC design system. Build menus in the dashboard, then place them with a block, a shortcode, a template tag, or the optional Elementor widget. Developed for Austin Community College - Instructional Web Projects.
 
 ## Version
-**3.0.1**
+**3.0.2**
 
 ## Requirements
 - WordPress 5.8+ (the block needs the block editor; the shortcode and template tag work anywhere)
@@ -146,7 +146,16 @@ The widget is only available when Elementor is active. Prefer **Menu Source → 
 
 ## Changelog
 
-### v3.0.1 (Current Release)
+### v3.0.2 (Current Release)
+
+#### Spacing and polish
+- **More room everywhere, on a fluid scale** (SM → LG): dropdown inset 24→48px vertical / 24→56px horizontal, 24→40px between sections, 28→48px between the section grid and the accordion group, 18→26px accordion row padding, and third-level links get a 36px hit area. Descriptions sit 8px under their title at 1.6 line-height, capped at 44 characters per line.
+- **Section titles flow as text** with their chip and arrow joined to the last word by non-breaking spaces, so a long title wraps cleanly and the chip or arrow can never land on a line of its own. Titles across the two columns line up on the same baseline.
+- Top bar: 12px/20px item padding with 8px between items; the accent underline is inset to the text.
+- Mobile overlay: 20–30px primary rows, 8px between sub-items.
+- **Elementor widget Style-tab values still override these defaults** — that's by design. If a widget shows a filled background behind the open top item, a different typeface, or other colors, clear the corresponding control (e.g. *Top-Level Style → Active → Background*, or the Typography group) to get the brand look.
+
+### v3.0.1
 
 #### Polish pass
 - **Theme and page-builder styles no longer leak into the menu.** Every menu rule is now scoped to `.iw-mega-menu-wrapper` and resets what themes put on bare `button`/`a` elements in every state. Hover/focus styles from the Elementor Kit (`.elementor-kit-N button:hover`) and Hello theme were outranking the menu's single-class rules — that was the purple filled accordion bar, the rounded purple pill behind open top items, and the purple link text. The scope stays below Elementor's `{{WRAPPER}}` selectors, so the widget's own style controls still win.

@@ -223,7 +223,7 @@ class IW_Mega_Menu_Renderer {
 															<?php else : ?>
 																<div class="iw-mega-menu__section-label" role="heading" aria-level="3">
 															<?php endif; ?>
-																<?php echo self::item_content( $second ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+																<?php echo self::item_content( $second, [ 'inline' => true, 'arrow' => (bool) $second_url ] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 																<?php echo self::item_description( $second ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 															<?php echo $second_url ? '</a>' : '</div>'; ?>
 														<?php endforeach; ?>
@@ -239,7 +239,7 @@ class IW_Mega_Menu_Renderer {
 										?>
 											<div class="iw-mega-menu__section iw-mega-menu__accordion">
 												<button class="iw-mega-menu__section-label iw-mega-menu__accordion-toggle" type="button" aria-controls="<?php echo esc_attr( $section_id ); ?>" aria-expanded="false">
-													<?php echo self::item_content( $second ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+													<?php echo self::item_content( $second, [ 'inline' => true ] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 													<?php echo self::item_description( $second ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 													<span class="iw-mega-menu__caret" aria-hidden="true"></span>
 												</button>
@@ -250,7 +250,7 @@ class IW_Mega_Menu_Renderer {
 															<div class="iw-mega-menu__third-col">
 																<?php foreach ( $column as $third ) : ?>
 																	<a class="iw-mega-menu__third-link" href="<?php echo esc_url( self::item_url( $third, '#' ) ); ?>">
-																		<?php echo self::item_content( $third, false ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+																		<?php echo self::item_content( $third, [ 'icon' => false ] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 																	</a>
 																<?php endforeach; ?>
 															</div>
@@ -306,7 +306,7 @@ class IW_Mega_Menu_Renderer {
 						<li class="iw-mega-menu__mobile-item">
 							<?php if ( $children ) : ?>
 								<button class="iw-mega-menu__mobile-link" type="button" data-mobile-index="<?php echo esc_attr( $i ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $top_sublist_id ); ?>">
-									<?php echo self::item_content( $top, false ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+									<?php echo self::item_content( $top, [ 'icon' => false ] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 									<span class="iw-mega-menu__mobile-caret" aria-hidden="true"></span>
 								</button>
 
@@ -318,7 +318,7 @@ class IW_Mega_Menu_Renderer {
 										<li class="iw-mega-menu__mobile-item">
 											<?php if ( $third_items ) : ?>
 												<button class="iw-mega-menu__mobile-link" type="button" data-mobile-index="<?php echo esc_attr( $i . '-' . $j ); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr( $second_sublist_id ); ?>">
-													<?php echo self::item_content( $second, false ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+													<?php echo self::item_content( $second, [ 'icon' => false ] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 													<span class="iw-mega-menu__mobile-caret" aria-hidden="true"></span>
 												</button>
 
@@ -326,14 +326,14 @@ class IW_Mega_Menu_Renderer {
 													<?php foreach ( $third_items as $third ) : ?>
 														<li class="iw-mega-menu__mobile-item">
 															<a class="iw-mega-menu__mobile-link" href="<?php echo esc_url( self::item_url( $third, '#' ) ); ?>">
-																<?php echo self::item_content( $third, false ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+																<?php echo self::item_content( $third, [ 'icon' => false ] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 															</a>
 														</li>
 													<?php endforeach; ?>
 												</ul>
 											<?php else : ?>
 												<a class="iw-mega-menu__mobile-link" href="<?php echo esc_url( self::item_url( $second, '#' ) ); ?>">
-													<?php echo self::item_content( $second, false ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+													<?php echo self::item_content( $second, [ 'icon' => false ] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 												</a>
 											<?php endif; ?>
 										</li>
@@ -341,7 +341,7 @@ class IW_Mega_Menu_Renderer {
 								</ul>
 							<?php else : ?>
 								<a class="iw-mega-menu__mobile-link" href="<?php echo esc_url( self::item_url( $top, '#' ) ); ?>">
-									<?php echo self::item_content( $top, false ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+									<?php echo self::item_content( $top, [ 'icon' => false ] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 								</a>
 							<?php endif; ?>
 						</li>
@@ -497,20 +497,35 @@ class IW_Mega_Menu_Renderer {
 	/**
 	 * Icon, label and badge for an item.
 	 *
-	 * @param array $item      Menu item.
-	 * @param bool  $show_icon Whether to include the item's icon.
+	 * @param array $item Menu item.
+	 * @param array $opts {
+	 *     @type bool $icon   Include the item's icon. Default true.
+	 *     @type bool $inline Section titles: the parts flow as text, with the
+	 *                        badge and arrow glued to the last word by
+	 *                        non-breaking spaces so neither wraps alone.
+	 *                        Default false (a flex row, for the bar, links
+	 *                        and the mobile overlay).
+	 *     @type bool $arrow  Append the ACC link-list arrow (inline only).
+	 * }
 	 * @return string
 	 */
-	private static function item_content( $item, $show_icon = true ) {
+	private static function item_content( $item, $opts = [] ) {
+		$opts  = wp_parse_args( $opts, [ 'icon' => true, 'inline' => false, 'arrow' => false ] );
+		$glue  = $opts['inline'] ? '&nbsp;' : '';
+		$badge = ! empty( $item['item_badge'] )
+			? $glue . '<span class="iw-mega-menu__badge">' . esc_html( $item['item_badge'] ) . '</span>'
+			: '';
+		$arrow = $opts['inline'] && $opts['arrow']
+			? $glue . '<span class="iw-mega-menu__arrow" aria-hidden="true"></span>'
+			: '';
+
 		$html = '<span class="iw-mega-menu__link-content">';
-		if ( $show_icon ) {
+		if ( $opts['icon'] ) {
 			$html .= self::render_icon( $item['item_icon'] ?? null, $item['item_icon_class'] ?? '' );
 		}
 		$html .= '<span class="iw-mega-menu__label">' . esc_html( $item['item_label'] ?? '' ) . '</span>';
-		if ( ! empty( $item['item_badge'] ) ) {
-			$html .= '<span class="iw-mega-menu__badge">' . esc_html( $item['item_badge'] ) . '</span>';
-		}
-		return $html . '</span>';
+
+		return $html . $badge . $arrow . '</span>';
 	}
 
 	/**

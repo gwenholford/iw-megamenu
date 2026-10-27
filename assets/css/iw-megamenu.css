@@ -83,6 +83,14 @@
   --iw-icon-box: 1.5rem;
   --iw-icon-gap: 12px;
 
+  /* Dropdown rhythm (SM → LG): panel inset, gap between sections, gap between
+     the section grid and the accordion group, and accordion row padding. */
+  --iw-panel-pad-x: clamp(24px, 14.7px + 2.9vw, 56px);
+  --iw-panel-pad-y: clamp(24px, 17.5px + 2vw, 48px);
+  --iw-section-gap: clamp(24px, 19.6px + 1.36vw, 40px);
+  --iw-group-gap: clamp(28px, 22.5px + 1.7vw, 48px);
+  --iw-row-pad: clamp(18px, 15.8px + 0.68vw, 26px);
+
   /* Nav bar context */
   --iw-fg: var(--acc-fg, var(--iw-white));
   --iw-accent: var(--acc-accent, var(--iw-yellow));
@@ -162,7 +170,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__top-item {
@@ -179,7 +187,7 @@
   align-items: flex-start;
   justify-content: center;
   min-height: var(--iw-control-height);
-  padding: 10px 16px 12px;
+  padding: 12px 20px 14px;
   font-size: var(--iw-fs-body-large);
   font-weight: 600;
   line-height: 1.2;
@@ -189,9 +197,9 @@
 .iw-mega-menu-wrapper .iw-mega-menu__top-link::after {
   content: "";
   position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 4px;
+  left: 20px;
+  right: 20px;
+  bottom: 6px;
   height: 1px;
   background: var(--iw-accent);
   opacity: 0;
@@ -264,12 +272,12 @@
 
 .iw-mega-menu-wrapper .iw-mega-menu__description {
   display: block;
-  max-width: 46ch;
-  margin-top: 6px;
+  max-width: 44ch;
+  margin-top: 8px;
   color: var(--iw-dark-grey);
   font-size: var(--iw-fs-body);
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__icon {
@@ -334,7 +342,7 @@
   box-sizing: border-box;
   width: 100%;
   margin-top: 12px;
-  padding: var(--iw-space-40);
+  padding: var(--iw-panel-pad-y) var(--iw-panel-pad-x);
   border-radius: var(--iw-radius);
   background: var(--iw-white);
   color: var(--iw-fg);
@@ -369,7 +377,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 30%);
   align-items: stretch;
-  gap: var(--iw-space-40);
+  gap: var(--iw-panel-pad-x);
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__dropdown--no-sidebar {
@@ -398,13 +406,13 @@
 .iw-mega-menu-wrapper .iw-mega-menu__second-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--iw-space-30) var(--iw-space-40);
+  gap: var(--iw-section-gap) var(--iw-panel-pad-x);
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__second-col {
   display: flex;
   flex-direction: column;
-  gap: var(--iw-space-30);
+  gap: var(--iw-section-gap);
   min-width: 0;
 }
 
@@ -428,10 +436,10 @@
   padding-left: calc(var(--iw-icon-box) + var(--iw-icon-gap));
 }
 
-/* Section titles flow as text, so a long title wraps naturally with its chip
-   and arrow after the last word. The icon hangs in the left padding, keeping
-   every line of the title aligned. (The renderer emits no whitespace between
-   these spans, so the hanging offsets are exact.) */
+/* Section titles flow as text, so a long title wraps naturally with its arrow
+   after the last word. The icon hangs in the left padding, keeping every line
+   of the title aligned. (The renderer emits no whitespace between these spans,
+   so the hanging offsets are exact.) */
 .iw-mega-menu-wrapper .iw-mega-menu__section-label > .iw-mega-menu__link-content {
   display: block;
 }
@@ -446,21 +454,21 @@
   vertical-align: middle;
 }
 
+/* A section's chip and arrow follow the title inline; the renderer joins them
+   to the last word with non-breaking spaces, so they wrap with it, never alone. */
 .iw-mega-menu-wrapper .iw-mega-menu__section-label > .iw-mega-menu__link-content > .iw-mega-menu__badge {
-  margin-left: 10px;
-  vertical-align: middle;
   position: relative;
-  top: -1px;
+  top: -2px;
+  margin-left: 4px;
+  vertical-align: middle;
 }
 
-/* ACC link-list arrow right after a linked section's title (inline-block, so the
-   title's hover underline skips it); slides right on hover. */
-.iw-mega-menu-wrapper a.iw-mega-menu__section-label .iw-mega-menu__label::after {
-  content: "";
+/* ACC link-list arrow on linked sections; slides right on hover. */
+.iw-mega-menu-wrapper .iw-mega-menu__arrow {
   display: inline-block;
   width: 0.7em;
   height: 0.6em;
-  margin-left: 8px;
+  margin-left: 2px;
   vertical-align: middle;
   background: var(--iw-accent);
   -webkit-mask: url(../icons/arrow.svg) center / contain no-repeat;
@@ -468,7 +476,7 @@
   transition: transform var(--iw-transition);
 }
 
-.iw-mega-menu-wrapper a.iw-mega-menu__section-label:hover .iw-mega-menu__label::after {
+.iw-mega-menu-wrapper a.iw-mega-menu__section-label:hover .iw-mega-menu__arrow {
   transform: translateX(6px);
 }
 
@@ -483,7 +491,7 @@
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__second-list + .iw-mega-menu__accordion {
-  margin-top: var(--iw-space-30);
+  margin-top: var(--iw-group-gap);
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__accordion-toggle {
@@ -491,9 +499,10 @@
   flex-direction: row; /* overrides the section-label column */
   flex-wrap: wrap;
   align-items: center;
-  column-gap: var(--iw-space-20);
+  column-gap: var(--iw-space-30);
   width: 100%;
-  padding: var(--iw-space-20) 0;
+  min-height: calc(var(--iw-row-pad) * 2 + 1.3em);
+  padding: var(--iw-row-pad) 0;
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__accordion-toggle .iw-mega-menu__link-content {
@@ -511,7 +520,7 @@
   flex: 0 0 100%;
   order: 2;
   max-width: none;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__accordion-toggle:has(.iw-mega-menu__icon) .iw-mega-menu__description {
@@ -519,40 +528,40 @@
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__section-content {
-  padding-bottom: var(--iw-space-30);
+  padding: 2px 0 var(--iw-group-gap);
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__section-content[hidden] {
   display: none;
 }
 
-/* Third-level links: three balanced columns. */
+/* Third-level links: three balanced columns. Each link has a 36px+ hit area. */
 .iw-mega-menu-wrapper .iw-mega-menu__third-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px var(--iw-space-30);
+  gap: 6px var(--iw-space-40);
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__third-col {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
   min-width: 0;
 }
 
 .iw-mega-menu-wrapper .iw-mega-menu__third-link {
   display: flex;
-  padding: 0;
+  padding: 6px 0;
   font-size: var(--iw-fs-body);
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 /* Sidebar */
 .iw-mega-menu-wrapper .iw-mega-menu-sidebar {
   box-sizing: border-box;
   min-width: 0;
-  padding: var(--iw-space-30);
+  padding: var(--iw-space-40) var(--iw-space-30);
   border-radius: var(--iw-radius);
   background: var(--iw-light-grey);
   color: var(--iw-black);
@@ -789,7 +798,7 @@ body.iw-mega-menu-mobile-open {
 
   /* Primary items: H3 size, white rule between. */
   .iw-mega-menu-wrapper .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item {
-    padding-block: var(--iw-space-20);
+    padding-block: clamp(20px, 16.4px + 1.14vw, 30px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.4);
   }
 
@@ -824,8 +833,8 @@ body.iw-mega-menu-mobile-open {
   .iw-mega-menu-wrapper .iw-mega-menu__mobile-sublist {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 8px 0 4px;
+    gap: 8px;
+    padding: 12px 0 6px;
   }
 
   .iw-mega-menu-wrapper .iw-mega-menu__mobile-sublist[hidden] {
