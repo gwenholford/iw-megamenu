@@ -31,6 +31,13 @@ class IW_Mega_Menu_Renderer {
 	private static $sidebar_depth = 0;
 
 	/**
+	 * Whether the current render is the admin builder's preview.
+	 *
+	 * @var bool
+	 */
+	private static $is_preview = false;
+
+	/**
 	 * Load a saved menu's items and settings.
 	 *
 	 * @param int $menu_id Mega menu post ID.
@@ -126,6 +133,7 @@ class IW_Mega_Menu_Renderer {
 	 *     @type string     $uid        Suffix for element IDs. Generated when empty.
 	 *     @type string     $label      Accessible name for the navigation.
 	 *     @type int|string $sidebar_id Sidebar shown for top items that don't set their own.
+	 *     @type bool       $preview    Builder preview: Elementor sidebars become labelled placeholders.
 	 * }
 	 * @return string
 	 */
@@ -139,7 +147,25 @@ class IW_Mega_Menu_Renderer {
 			'uid'        => '',
 			'label'      => '',
 			'sidebar_id' => '',
+			'preview'    => false,
 		] );
+
+		$was_preview      = self::$is_preview;
+		self::$is_preview = (bool) $args['preview'];
+		$html             = self::render_markup( $tree, $args );
+		self::$is_preview = $was_preview;
+
+		return $html;
+	}
+
+	/**
+	 * Build the menu markup. See render().
+	 *
+	 * @param array $tree Valid top-level items.
+	 * @param array $args Parsed render() arguments.
+	 * @return string
+	 */
+	private static function render_markup( $tree, $args ) {
 
 		$uid   = '' !== (string) $args['uid'] ? sanitize_html_class( (string) $args['uid'] ) : 'menu-' . ( ++self::$instance_count );
 		$label = '' !== (string) $args['label'] ? (string) $args['label'] : __( 'Main Navigation', 'iw-mega-menu' );
@@ -182,8 +208,8 @@ class IW_Mega_Menu_Renderer {
 											}
 										}
 
-										// Two columns of up to four section links each.
-										$columns = array_pad( array_slice( array_chunk( $non_accordion, 4 ), 0, 2 ), 2, [] );
+										// Up to eight section links, balanced across two columns.
+										$columns = self::balance_columns( $non_accordion, 2, 4 );
 										?>
 										<?php if ( $non_accordion ) : ?>
 											<div class="iw-mega-menu__second-list">
@@ -208,8 +234,8 @@ class IW_Mega_Menu_Renderer {
 
 										<?php foreach ( $accordion as $j => $second ) :
 											$section_id = $dropdown_id . '-section-' . $j;
-											// Three columns of up to two links each.
-											$third_columns = array_pad( array_slice( array_chunk( self::children_of( $second ), 2 ), 0, 3 ), 3, [] );
+											// Up to six links, balanced across three columns.
+											$third_columns = self::balance_columns( self::children_of( $second ), 3, 2 );
 										?>
 											<div class="iw-mega-menu__section iw-mega-menu__accordion">
 												<button class="iw-mega-menu__section-label iw-mega-menu__accordion-toggle" type="button" aria-controls="<?php echo esc_attr( $section_id ); ?>" aria-expanded="false">
@@ -388,6 +414,15 @@ class IW_Mega_Menu_Renderer {
 		if ( 'wp_block' === $post->post_type ) {
 			// Through core's own Pattern block, so embeds and shortcodes behave as anywhere else.
 			$html = do_blocks( '<!-- wp:block {"ref":' . $template_id . '} /-->' );
+		} elseif ( 'elementor_library' === $post->post_type && self::$is_preview ) {
+			// Elementor's styles only exist on Elementor pages, so the builder preview names the template instead.
+			$html = sprintf(
+				'<div class="iw-mega-menu-sidebar__placeholder"><strong>%1$s</strong><span>%2$s</span></div>',
+				esc_html( get_the_title( $post ) ),
+				esc_html( self::elementor_active()
+					? __( 'Elementor template — shown on the live site.', 'iw-mega-menu' )
+					: __( 'Elementor template — Elementor is inactive, so this sidebar will not display.', 'iw-mega-menu' ) )
+			);
 		} elseif ( 'elementor_library' === $post->post_type && self::elementor_active() ) {
 			$html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $template_id );
 		}
@@ -417,6 +452,21 @@ class IW_Mega_Menu_Renderer {
 	public static function enqueue_assets() {
 		wp_enqueue_style( 'iw-mega-menu' );
 		wp_enqueue_script( 'iw-mega-menu' );
+	}
+
+	/**
+	 * Split items into columns, filling each in turn as evenly as possible, so
+	 * two items sit side by side rather than stacking in the first column.
+	 *
+	 * @param array $items       Items in display order.
+	 * @param int   $num_columns Number of columns.
+	 * @param int   $max_per_col Most items a column holds; any beyond the total capacity are dropped.
+	 * @return array[] Exactly $num_columns lists.
+	 */
+	private static function balance_columns( $items, $num_columns, $max_per_col ) {
+		$items   = array_slice( array_values( $items ), 0, $num_columns * $max_per_col );
+		$per_col = max( 1, (int) ceil( count( $items ) / $num_columns ) );
+		return array_pad( array_chunk( $items, $per_col ), $num_columns, [] );
 	}
 
 	/**

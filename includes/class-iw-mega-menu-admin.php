@@ -84,7 +84,32 @@ class IW_Mega_Menu_Admin {
 		wp_localize_script( 'iw-admin-builder-js', 'iwMegaMenuAdminData', [
 			'restUrl' => esc_url_raw( rest_url( 'iw-mega-menu/v1' ) ),
 			'nonce'   => wp_create_nonce( 'wp_rest' ),
+			'preview' => $this->get_preview_assets( $plugin_dir ),
 		] );
+	}
+
+	/**
+	 * Stylesheets for the builder's preview frame: the same ones a page with the
+	 * menu loads, so the preview matches the live site.
+	 *
+	 * @param string $plugin_dir Plugin directory path.
+	 * @return array
+	 */
+	private function get_preview_assets( $plugin_dir ) {
+		$menu_css = 'assets/css/iw-megamenu.css';
+
+		return [
+			// Page order: core block styles, then theme global styles, then the menu's own.
+			'blockLibrary' => esc_url_raw( includes_url( 'css/dist/block-library/style.min.css' ) ),
+			// Theme presets (on the ACC theme, its design tokens) and element styles.
+			'globalStyles' => function_exists( 'wp_get_global_stylesheet' ) ? wp_get_global_stylesheet() : '',
+			'fontAwesome'  => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
+			'menu'         => esc_url_raw( add_query_arg(
+				'ver',
+				file_exists( $plugin_dir . $menu_css ) ? filemtime( $plugin_dir . $menu_css ) : IW_MEGA_MENU_VERSION,
+				plugins_url( $menu_css, dirname( __FILE__ ) )
+			) ),
+		];
 	}
 
 	/**

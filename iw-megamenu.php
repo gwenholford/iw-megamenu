@@ -2,7 +2,7 @@
 /**
  * Plugin Name: IW Mega Menu
  * Description: An accessible, multi-level mega menu for any WordPress site. Build menus in the dashboard, then place them with the IW Mega Menu block, the [iw_mega_menu] shortcode, the iw_mega_menu() template tag, or the optional Elementor widget. Developed for Austin Community College - Instructional Web Projects.
- * Version: 3.0.0
+ * Version: 3.0.1
  * Author: Austin Community College - Instructional Web Projects
  * Author URI: https://instruction.austincc.edu
  * Plugin URI: https://github.com/gwenholford/iw-megamenu
@@ -33,7 +33,7 @@ if ( defined( 'IW_MEGA_MENU_VERSION' ) ) {
 }
 
 // Define Plugin Constants
-define( 'IW_MEGA_MENU_VERSION', '3.0.0' );
+define( 'IW_MEGA_MENU_VERSION', '3.0.1' );
 define( 'IW_MEGA_MENU_FILE', __FILE__ );
 define( 'IW_MEGA_MENU_PATH', plugin_dir_path( __FILE__ ) );
 define( 'IW_MEGA_MENU_URL', plugin_dir_url( __FILE__ ) );

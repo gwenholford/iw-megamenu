@@ -3,7 +3,7 @@
  * Full tree editor with live preview, WP menu import, CRUD operations
  *
  * @package IWMegaMenu
- * @version 3.0.0
+ * @version 3.0.1
  */
 document.addEventListener('DOMContentLoaded', () => {
 	const root = document.getElementById('iw-mega-menu-builder-root');
@@ -186,6 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.focusLabelForId = null;
 			this.previewOpenTopId = null;
 			this.previewOpenSectionId = null;
+			this.previewMobileOpen = true;
+			this.previewFrame = null;
+			this.previewHtml = null; // Last server-rendered preview; null until the first render.
+			this.previewTimer = null;
+			this.previewRequest = 0;
+
+			window.addEventListener('resize', () => this.fitPreview());
 
 			window.addEventListener('beforeunload', (e) => {
 				if (this.dirty) {
@@ -247,6 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.focusLabelForId = null;
 			this.previewOpenTopId = null;
 			this.previewOpenSectionId = null;
+			this.previewMobileOpen = true;
+			this.previewHtml = null; // Don't flash the previous menu while the new one renders.
 			this.isCreatingMenu = false;
 			this.isImportingWp = false;
 			this.isImportingLegacy = false;
@@ -551,11 +560,15 @@ document.addEventListener('DOMContentLoaded', () => {
 						${this.currentMenuId ? this.renderTreePanel(items) : '<div class="iw-empty-state"><p>Select or create a menu to begin editing.</p></div>'}
 					</div>
 					<div class="iw-builder-preview-panel ${this.isMobilePreview ? 'is-mobile' : ''}" id="iw-preview-panel">
-						${this.currentMenuId ? this.renderPreview(items) : '<div class="iw-empty-state"><p>Preview will appear here</p></div>'}
+						${this.currentMenuId ? `<div class="iw-preview-column">
+							<div class="iw-preview-stage" id="iw-preview-stage"></div>
+							<p class="iw-preview-caption" id="iw-preview-caption"></p>
+						</div>` : '<div class="iw-empty-state"><p>Preview will appear here</p></div>'}
 					</div>
 				</div>
 			`;
 			this.attachEvents();
+			this.mountPreview();
 
 			if (this.isCreatingMenu) {
 				document.getElementById('iw-newmenu-name')?.focus();
@@ -766,113 +779,167 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		// ── Live Preview ──
-		renderPreview(items) {
-			if (!items || items.length === 0) {
-				return '<div class="iw-empty-state"><p>Add menu items to see a live preview</p></div>';
-			}
+		// The preview is the real front-end markup — rendered by the plugin's PHP
+		// renderer over REST — inside an isolated frame that loads the same
+		// stylesheets as the site, so it can't drift from the live menu and no
+		// admin styles can leak into it. Desktop renders at the ACC LG frame
+		// (1200px) and scales to fit the panel; Mobile is a 375px phone frame.
+		mountPreview() {
+			const stage = document.getElementById('iw-preview-stage');
+			this.previewFrame = null;
+			if (!stage) return;
 
-			const topLinks = items.map((top) => {
-				const hasDropdown = top.children && top.children.length > 0;
-				const topIconHtml = top.item_icon?.value ? `<span class="iw-mega-menu__icon ${top.item_icon_class || 'icon-acc-purple'}" aria-hidden="true"><i class="${esc(top.item_icon.value)}"></i></span>` : '';
-				const topDescHtml = top.item_description ? `<span class="iw-mega-menu__description">${esc(top.item_description)}</span>` : '';
-				const topLinkContent = `<span class="iw-mega-menu__link-content">
-						${topIconHtml}
-						<span class="iw-mega-menu__label">${esc(top.item_label)}</span>
-						${top.item_badge ? `<span class="iw-mega-menu__badge">${esc(top.item_badge)}</span>` : ''}
-					</span>
-					${topDescHtml}`;
-				const isOpen = this.previewOpenTopId === top.id;
-				return `<li class="iw-mega-menu__top-item">
-					${hasDropdown
-						? `<button class="iw-mega-menu__top-link" type="button" data-preview-top="${esc(top.id)}" aria-expanded="${isOpen}">${topLinkContent}</button>`
-						: `<a class="iw-mega-menu__top-link" href="${esc(top.item_link?.url || '#')}">${topLinkContent}</a>`
-					}
-					${hasDropdown ? this.renderPreviewDropdown(top, isOpen) : ''}
-				</li>`;
-			}).join('');
+			const assets = (window.iwMegaMenuAdminData && window.iwMegaMenuAdminData.preview) || {};
+			const link = (href) => (href ? `<link rel="stylesheet" href="${esc(href)}">` : '');
+			const frame = document.createElement('iframe');
+			frame.className = 'iw-preview-frame';
+			frame.title = 'Menu preview';
+			frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8">
+				${link(assets.blockLibrary)}
+				<style>${String(assets.globalStyles || '').replace(/<\/style/gi, '<\\/style')}</style>
+				${link(assets.fontAwesome)}
+				${link(assets.menu)}
+				<style>
+					html, body { margin: 0; background: #f0f0f1; }
+					/* Stand-in for the site header the menu sits in. */
+					.iw-preview-bar { box-sizing: border-box; padding: 12px 32px; background: #2E1A47; }
+					@media (max-width: 699px) { .iw-preview-bar { padding: 10px 20px; } }
+					.iw-preview-empty { margin: 0; color: #fff; font: italic 14px/1.5 sans-serif; }
+					/* Re-rendered on every edit, so skip the open/close animations. */
+					*, *::before, *::after { transition: none !important; }
+				</style>
+			</head><body><div class="iw-preview-bar" id="iw-preview-root"></div></body></html>`;
 
-			return `
-				<div class="iw-preview-container">
-					<div class="iw-mega-menu-wrapper" style="background: #4D1979; border-radius: 10px;">
-						<nav class="iw-mega-menu__nav" aria-label="Preview Navigation">
-							<ul class="iw-mega-menu__top-level">${topLinks}</ul>
-						</nav>
-					</div>
-				</div>`;
+			frame.addEventListener('load', () => {
+				this.previewFrame = frame;
+				frame.contentDocument.addEventListener('click', (e) => this.handlePreviewClick(e));
+				this.writePreview();
+			});
+			stage.appendChild(frame);
+			this.updatePreview();
 		}
 
-		renderPreviewDropdown(top, isOpen) {
-			const children = top.children || [];
-			const nonAccordion = children.filter(c => c.is_accordion !== 'yes');
-			const accordion = children.filter(c => c.is_accordion === 'yes');
-			const hasSidebar = !!top.sidebar_template_id;
-
-			let secondHtml = '';
-			if (nonAccordion.length > 0) {
-				const cols = [[], []];
-				nonAccordion.forEach((s, idx) => { const c = Math.floor(idx / 4); if (c < 2) cols[c].push(s); });
-				secondHtml = `<div class="iw-mega-menu__second-list">${cols.map(col =>
-					`<div class="iw-mega-menu__second-col">${col.map(s => {
-						const hasUrl = s.item_link?.url;
-						const iconHtml = s.item_icon?.value ? `<span class="iw-mega-menu__icon ${s.item_icon_class || 'icon-acc-purple'}" aria-hidden="true"><i class="${esc(s.item_icon.value)}"></i></span>` : '';
-						return `<${hasUrl ? 'a href="' + esc(s.item_link.url) + '"' : 'div role="heading" aria-level="3"'} class="iw-mega-menu__section-label">
-							<span class="iw-mega-menu__link-content">
-								${iconHtml}
-								<span class="iw-mega-menu__label">${esc(s.item_label)}</span>
-								${s.item_badge ? `<span class="iw-mega-menu__badge">${esc(s.item_badge)}</span>` : ''}
-							</span>
-							${s.item_description ? `<span class="iw-mega-menu__description">${esc(s.item_description)}</span>` : ''}
-						</${hasUrl ? 'a' : 'div'}>`;
-					}).join('')}</div>`
-				).join('')}</div>`;
-			}
-
-			const accordionHtml = accordion.map(s => {
-				const iconHtml = s.item_icon?.value ? `<span class="iw-mega-menu__icon ${s.item_icon_class || 'icon-acc-purple'}" aria-hidden="true"><i class="${esc(s.item_icon.value)}"></i></span>` : '';
-				const thirdLinks = (s.children || []);
-				const thirdCols = [[], [], []];
-				thirdLinks.forEach((l, idx) => { const c = Math.floor(idx / 2); if (c < 3) thirdCols[c].push(l); });
-				const sectionOpen = this.previewOpenSectionId === s.id;
-
-				return `<div class="iw-mega-menu__section iw-mega-menu__accordion">
-					<button class="iw-mega-menu__section-label iw-mega-menu__accordion-toggle" type="button" data-preview-section="${s.id}" aria-expanded="${sectionOpen}">
-						<span class="iw-mega-menu__link-content">
-							${iconHtml}
-							<span class="iw-mega-menu__label">${esc(s.item_label)}</span>
-							${s.item_badge ? `<span class="iw-mega-menu__badge">${esc(s.item_badge)}</span>` : ''}
-						</span>
-						${s.item_description ? `<span class="iw-mega-menu__description">${esc(s.item_description)}</span>` : ''}
-						<span class="iw-mega-menu__caret" aria-hidden="true"></span>
-					</button>
-					<div class="iw-mega-menu__section-content" ${sectionOpen ? '' : 'hidden'}>
-						${thirdLinks.length === 0 ? '<p class="iw-preview-note">No links in this section yet.</p>' : `
-						<div class="iw-mega-menu__third-list">
-							${thirdCols.map(col => `<div class="iw-mega-menu__third-col">${col.map(l =>
-								`<a class="iw-mega-menu__third-link" href="${esc(l.item_link?.url || '#')}">
-									<span class="iw-mega-menu__link-content"><span class="iw-mega-menu__label">${esc(l.item_label)}</span>${l.item_badge ? `<span class="iw-mega-menu__badge">${esc(l.item_badge)}</span>` : ''}</span>
-								</a>`
-							).join('')}</div>`).join('')}
-						</div>`}
-					</div>
-				</div>`;
-			}).join('');
-
-			const sidebarClass = hasSidebar ? 'iw-mega-menu__dropdown--with-sidebar' : 'iw-mega-menu__dropdown--no-sidebar';
-			return `<div class="iw-mega-menu__dropdown ${sidebarClass}" data-preview-dropdown="${esc(top.id)}" ${isOpen ? '' : 'hidden'}>
-				<div class="iw-mega-menu__dropdown-main">
-					${secondHtml}
-					${accordionHtml}
-				</div>
-				${hasSidebar ? `<aside class="iw-mega-menu-sidebar"><p>Sidebar Template #${esc(top.sidebar_template_id)}</p></aside>` : ''}
-			</div>`;
-		}
-
+		// Debounced: typing in a field re-renders once it pauses.
 		updatePreview() {
-			const previewPanel = document.getElementById('iw-preview-panel');
-			if (previewPanel && this.currentMenuId) {
-				previewPanel.innerHTML = this.renderPreview(this.currentMenuData.items || []);
-				this.attachPreviewEvents();
+			if (!this.currentMenuId) return;
+			clearTimeout(this.previewTimer);
+			this.previewTimer = setTimeout(() => this.fetchPreview(), 250);
+		}
+
+		async fetchPreview() {
+			const request = ++this.previewRequest;
+			let html;
+			try {
+				const res = await wp.apiFetch({ path: '/iw-mega-menu/v1/preview', method: 'POST', data: { data: this.currentMenuData } });
+				html = res && typeof res.html === 'string' ? res.html : '';
+			} catch (e) {
+				console.error('Error rendering preview:', e);
+				html = `<p class="iw-preview-empty">Preview unavailable: ${esc(e.message || 'the request failed')}</p>`;
 			}
+			if (request !== this.previewRequest) return; // A newer edit already superseded this one.
+			this.previewHtml = html;
+			this.writePreview();
+		}
+
+		writePreview() {
+			const doc = this.previewFrame && this.previewFrame.contentDocument;
+			const root = doc && doc.getElementById('iw-preview-root');
+			if (!root || this.previewHtml === null) return;
+
+			root.innerHTML = this.previewHtml || '<p class="iw-preview-empty">Add menu items to see a live preview.</p>';
+			this.applyPreviewState(doc);
+			this.fitPreview();
+		}
+
+		// Open/closed state lives on the builder, so edits never collapse what you were looking at.
+		applyPreviewState(doc) {
+			const items = this.currentMenuData.items || [];
+			const topIndex = items.findIndex(t => t.id === this.previewOpenTopId);
+			const top = items[topIndex];
+			const sectionIndex = top && Array.isArray(top.children) ? top.children.findIndex(s => s.id === this.previewOpenSectionId) : -1;
+			const setOpen = (btn, open) => {
+				btn.setAttribute('aria-expanded', String(open));
+				const target = doc.getElementById(btn.getAttribute('aria-controls'));
+				if (target) target.hidden = !open;
+			};
+
+			// Desktop dropdowns and accordions.
+			doc.querySelectorAll('.iw-mega-menu__top-link[aria-controls]').forEach(btn => {
+				setOpen(btn, Number(btn.dataset.dropdownIndex) === topIndex);
+			});
+			doc.querySelectorAll('.iw-mega-menu__accordion-toggle').forEach(btn => {
+				setOpen(btn, btn.getAttribute('aria-controls') === `iw-mega-menu-preview-dropdown-${topIndex}-section-${sectionIndex}`);
+			});
+
+			// Mobile overlay and its sublists.
+			const toggle = doc.querySelector('.iw-mega-menu__mobile-toggle');
+			if (toggle) setOpen(toggle, this.isMobilePreview && this.previewMobileOpen);
+			doc.querySelectorAll('.iw-mega-menu__mobile-link[aria-controls]').forEach(btn => {
+				const [i, j] = String(btn.dataset.mobileIndex).split('-').map(Number);
+				setOpen(btn, j === undefined ? i === topIndex : i === topIndex && j === sectionIndex);
+			});
+		}
+
+		handlePreviewClick(e) {
+			const target = e.target.closest('a, button');
+			if (!target) return;
+			e.preventDefault(); // Preview links never navigate away from the builder.
+
+			const items = this.currentMenuData.items || [];
+			const toggleTop = (top) => { if (top) this.previewOpenTopId = this.previewOpenTopId === top.id ? null : top.id; };
+			const toggleSection = (section) => { if (section) this.previewOpenSectionId = this.previewOpenSectionId === section.id ? null : section.id; };
+
+			if (target.matches('.iw-mega-menu__top-link[aria-controls]')) {
+				toggleTop(items[Number(target.dataset.dropdownIndex)]);
+			} else if (target.matches('.iw-mega-menu__accordion-toggle')) {
+				const match = /-dropdown-(\d+)-section-(\d+)$/.exec(target.getAttribute('aria-controls') || '');
+				if (match) toggleSection(items[Number(match[1])]?.children?.[Number(match[2])]);
+			} else if (target.matches('.iw-mega-menu__mobile-toggle')) {
+				this.previewMobileOpen = true;
+			} else if (target.matches('.iw-mega-menu__mobile-close')) {
+				this.previewMobileOpen = false;
+			} else if (target.matches('.iw-mega-menu__mobile-link[aria-controls]')) {
+				const [i, j] = String(target.dataset.mobileIndex).split('-').map(Number);
+				if (j === undefined) {
+					toggleTop(items[i]);
+				} else {
+					if (items[i] && this.previewOpenTopId !== items[i].id) this.previewOpenTopId = items[i].id;
+					toggleSection(items[i]?.children?.[j]);
+				}
+			} else {
+				return;
+			}
+
+			this.applyPreviewState(target.ownerDocument);
+			this.fitPreview();
+		}
+
+		// Size the frame to its content; scale the desktop frame down to the panel width.
+		fitPreview() {
+			const stage = document.getElementById('iw-preview-stage');
+			const caption = document.getElementById('iw-preview-caption');
+			const frame = this.previewFrame;
+			const doc = frame && frame.contentDocument;
+			if (!stage || !doc || !doc.body) return;
+
+			if (this.isMobilePreview) {
+				frame.style.width = '375px';
+				frame.style.height = '720px';
+				frame.style.transform = '';
+				stage.style.height = '';
+				if (caption) caption.textContent = 'Mobile · 375px wide · click the menu to explore';
+				return;
+			}
+
+			const width = 1200;
+			const scale = Math.min(1, stage.clientWidth / width);
+			if (caption) caption.textContent = `Desktop · ${width}px wide, shown at ${Math.round(scale * 100)}% · click the menu to explore`;
+			frame.style.width = `${width}px`;
+			frame.style.transform = `scale(${scale})`;
+			frame.style.height = '0px'; // Collapse first so scrollHeight measures the content, not the old frame.
+			const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight) + 24;
+			frame.style.height = `${height}px`;
+			stage.style.height = `${Math.ceil(height * scale)}px`;
 		}
 
 		// ── Find item by ID in tree ──
@@ -1111,7 +1178,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 
 			this.attachDragEvents(treeContainer);
-			this.attachPreviewEvents();
 		}
 
 		handleTreeAction(btn) {
@@ -1290,24 +1356,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 		}
 
-		attachPreviewEvents() {
-			// Open/closed state lives on the instance, so edits never collapse what you were looking at.
-			document.querySelectorAll('[data-preview-top]').forEach(btn => {
-				btn.addEventListener('click', () => {
-					const topId = btn.dataset.previewTop;
-					this.previewOpenTopId = this.previewOpenTopId === topId ? null : topId;
-					this.updatePreview();
-				});
-			});
-
-			document.querySelectorAll('[data-preview-section]').forEach(btn => {
-				btn.addEventListener('click', () => {
-					const sectionId = btn.dataset.previewSection;
-					this.previewOpenSectionId = this.previewOpenSectionId === sectionId ? null : sectionId;
-					this.updatePreview();
-				});
-			});
-		}
 	}
 
 	new IWMegaMenuBuilder();

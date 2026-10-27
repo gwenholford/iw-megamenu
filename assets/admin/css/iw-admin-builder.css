@@ -1,6 +1,6 @@
 /**
  * IW Mega Menu Admin Builder Styles
- * @version 3.0.0
+ * @version 3.0.1
  */
 
 /* ── Base Layout ── */
@@ -119,21 +119,50 @@
 	transition: all 0.3s ease;
 }
 
-/* Mobile preview mode */
+/* Preview stage: holds the isolated preview frame (see mountPreview() in the
+   builder JS). The menu inside is styled only by the front-end stylesheet. */
+.iw-preview-column {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.iw-preview-caption {
+	margin: 0;
+	color: #646970;
+	font-size: 12px;
+}
+
+.iw-preview-stage {
+	flex: none;
+	min-width: 0;
+	width: 100%;
+	overflow: hidden;
+	border-radius: 10px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.iw-preview-frame {
+	display: block;
+	border: 0;
+	background: #f0f0f1;
+	transform-origin: 0 0;
+}
+
+/* Mobile preview mode: a 375px phone frame. */
 .iw-builder-preview-panel.is-mobile {
 	background: #e0e0e0;
 }
 
-.iw-builder-preview-panel.is-mobile .iw-preview-container {
-	max-width: 375px;
+.iw-builder-preview-panel.is-mobile .iw-preview-stage {
+	flex: 0 0 auto;
+	width: 375px;
 	border: 2px solid #999;
 	border-radius: 20px;
-	overflow: hidden;
-	box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-}
-
-.iw-preview-container {
-	width: 100%;
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
 .iw-empty-state {
@@ -775,188 +804,3 @@
 	font-style: italic;
 }
 
-.iw-preview-note {
-	margin: 0;
-	font-size: 11px;
-	color: #787c82;
-	font-style: italic;
-}
-
-/* ── Preview Panel: Load frontend mega menu styles ── */
-.iw-builder-preview-panel .iw-mega-menu__nav {
-	width: 100%;
-	background: transparent;
-	position: relative;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__top-level {
-	display: flex;
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	flex-wrap: wrap;
-	align-items: center;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__top-link {
-	background: none;
-	border: none;
-	font-family: inherit;
-	font-size: 14px;
-	font-weight: 600;
-	color: #fff;
-	padding: 0.75rem 1rem;
-	cursor: pointer;
-	border-radius: 6px;
-	transition: background 0.2s ease;
-	text-decoration: none;
-	display: inline-flex;
-	flex-direction: column;
-	align-items: flex-start;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__top-link:hover,
-.iw-builder-preview-panel .iw-mega-menu__top-link:focus {
-	background: rgba(255,255,255,0.15);
-	color: #fff;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__dropdown {
-	background: #fff;
-	border-radius: 0 0 12px 12px;
-	box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-	padding: 20px;
-	display: flex;
-	gap: 20px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__dropdown[hidden] {
-	display: none;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__dropdown-main {
-	flex: 1;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__second-list {
-	display: flex;
-	gap: 20px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__second-col {
-	flex: 1;
-}
-
-/* Colors below are deliberately NOT redeclared — assets/css/iw-megamenu.css is
-   enqueued on this page too, and supplies the real brand colors. Only sizing
-   and spacing are scaled down here for the narrower preview pane. Redeclaring
-   colors here is what caused the preview to drift from the live site. */
-.iw-builder-preview-panel .iw-mega-menu__section-label {
-	display: flex;
-	flex-direction: column;
-	padding: 8px 10px;
-	text-decoration: none;
-	border-radius: 6px;
-	cursor: pointer;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__link-content {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	font-weight: 600;
-	font-size: 13px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__description {
-	font-size: 11px;
-	margin-top: 2px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__badge {
-	font-size: 10px;
-	min-width: 0;
-	height: auto;
-	padding: 2px 7px;
-	border-radius: 10px;
-	margin-left: 4px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__icon {
-	font-size: 16px;
-}
-
-/* Top-Level icons/descriptions must stay legible regardless of icon color,
-   since they sit on the dark preview nav bar rather than a white dropdown. */
-.iw-builder-preview-panel .iw-mega-menu__top-link .iw-mega-menu__icon,
-.iw-builder-preview-panel .iw-mega-menu__top-link .iw-mega-menu__icon i {
-	color: #fff !important;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__top-link .iw-mega-menu__description {
-	color: rgba(255, 255, 255, 0.75);
-	font-size: 0.65rem;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__accordion {
-	border-top: 1px solid #eee;
-	padding-top: 8px;
-	margin-top: 8px;
-}
-
-/* The row direction has to be restated here: the scoped .iw-mega-menu__section-label
-   rule above is two classes deep and so outranks the single-class accordion rule in
-   assets/css/iw-megamenu.css, which would otherwise leave this a column. */
-.iw-builder-preview-panel .iw-mega-menu__accordion-toggle {
-	border: none;
-	padding: 8px 10px;
-	width: 100%;
-	text-align: left;
-	cursor: pointer;
-	border-radius: 6px;
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: flex-start;
-	column-gap: 0.5rem;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__section-content {
-	padding: 10px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__section-content[hidden] {
-	display: none;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__third-list {
-	display: flex;
-	gap: 10px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__third-col {
-	flex: 1;
-}
-
-.iw-builder-preview-panel .iw-mega-menu__third-link {
-	padding: 4px 8px;
-	text-decoration: none;
-	font-size: 13px;
-	border-radius: 4px;
-}
-
-.iw-builder-preview-panel .iw-mega-menu-sidebar {
-	flex: 0 0 200px;
-	background: #f9f9f9;
-	border-left: 1px solid #eee;
-	padding: 15px;
-	border-radius: 0 0 12px 0;
-	color: #787c82;
-	font-style: italic;
-}
-
-/* Icon accent colors are NOT redeclared here. assets/css/iw-megamenu.css is
-   enqueued on this page and defines .icon-acc-* globally (including the nested
-   i/svg selectors), so the preview, the tree-row indicators, and the editor
-   swatch all pick up the exact same colors the live site uses. */

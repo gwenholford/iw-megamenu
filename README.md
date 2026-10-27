@@ -3,7 +3,7 @@
 An accessible, multi-level mega menu for any WordPress site, styled to the ACC design system. Build menus in the dashboard, then place them with a block, a shortcode, a template tag, or the optional Elementor widget. Developed for Austin Community College - Instructional Web Projects.
 
 ## Version
-**3.0.0**
+**3.0.1**
 
 ## Requirements
 - WordPress 5.8+ (the block needs the block editor; the shortcode and template tag work anywhere)
@@ -23,7 +23,7 @@ An accessible, multi-level mega menu for any WordPress site, styled to the ACC d
 - **ACC brand styling**: built on the ACC design system's tokens (palette, Montserrat type scale, spacing, focus rings, 300ms transitions). On the ACC theme it reads the theme's `theme.json` custom properties directly; elsewhere it falls back to the same values. Colors follow the ACC background-context rule — orange accents on light backgrounds, yellow on dark.
 - **Optional Elementor widget**: loaded only when Elementor is active, with typography, color, border and spacing controls and the legacy repeater kept for older pages.
 - **Sidebars**: show a pattern (synced or not) beside any dropdown, or a saved Elementor template when Elementor is active.
-- **Builder**: dedicated admin dashboard with nested menu editing, a side-by-side live preview, ACC brand icon color presets, WordPress menu import, and JSON import/export.
+- **Builder**: dedicated admin dashboard with nested menu editing, a side-by-side live preview that is the real front-end render (desktop at 1200px scaled to fit, or a 375px phone), ACC brand icon color presets, WordPress menu import, and JSON import/export.
 - Reusable saved menus stored as `iw_mega_menu` records, with a REST API for persistence.
 
 ## Menu Structure
@@ -60,7 +60,7 @@ Items beyond these counts are not rendered.
 - **Brand restyle.** Menus now follow the ACC design system (see the v3.0.0 changelog). Elementor widget style controls still override the defaults.
 - **Retired icon colors.** Items set to Teal, Blue (Light), Blue (Dark) or Red now render purple, purple, dark purple and orange. Pick a new brand color in the builder if the substitute doesn't suit.
 - **Mobile breakpoint.** The mobile drawer now takes over below 700px instead of 768px; between 700 and 767px the desktop bar shows.
-- **Font.** Menus use Montserrat. The ACC theme loads it; on other themes the menu falls back to Helvetica Neue / Arial unless the theme loads Montserrat.
+- **Font.** Menus use Montserrat — the ACC theme's own on the ACC theme, otherwise a copy bundled with the plugin (no third-party font request).
 - **Elementor no longer required.** The "Elementor is required" notice is gone; on sites without Elementor, use the block, shortcode or template tag.
 
 ## Updating an existing install
@@ -94,7 +94,7 @@ Then either upload that zip (WordPress 5.5+ detects the matching folder and offe
 3. Click **+ Add Top-Level Item** to add a nav bar item. Click any row to open its editor.
 4. Expand a row with the chevron, then use **+ Add Section** / **+ Add Link** to nest items beneath it.
 5. In an item's editor, set the Label, Link URL, Description, Badge, and Icon. Click **Browse** beside the Icon field to pick from the built-in icon set, or type any Font Awesome class directly.
-6. Watch the right-hand live preview — it opens to whatever you're editing and matches how the item will render on the site.
+6. Watch the right-hand live preview — it opens to whatever you're editing, and it is the site's real markup and stylesheet, so what you see is what the site renders. Click the menu inside it to explore; switch **Desktop**/**Mobile** to see both layouts. (Elementor-template sidebars appear as a labelled placeholder, since Elementor's styles only load on Elementor pages.)
 7. Click **Save Menu**, then place it on the site (see below). The builder shows the shortcode and template tag for the selected menu under its toolbar.
 
 ## Placing a menu
@@ -146,7 +146,16 @@ The widget is only available when Elementor is active. Prefer **Menu Source → 
 
 ## Changelog
 
-### v3.0.0 (Current Release)
+### v3.0.1 (Current Release)
+
+#### Polish pass
+- **Theme and page-builder styles no longer leak into the menu.** Every menu rule is now scoped to `.iw-mega-menu-wrapper` and resets what themes put on bare `button`/`a` elements in every state. Hover/focus styles from the Elementor Kit (`.elementor-kit-N button:hover`) and Hello theme were outranking the menu's single-class rules — that was the purple filled accordion bar, the rounded purple pill behind open top items, and the purple link text. The scope stays below Elementor's `{{WRAPPER}}` selectors, so the widget's own style controls still win.
+- **Layout and spacing.** Sections are balanced across the two columns (two sections now sit side by side instead of stacking beside an empty column; third-level links balance across three columns the same way). Section titles flow as text, so long titles wrap cleanly with their chip after the last word, and descriptions and accordion links line up with the title text rather than the icon. Accordions get ACC hairline rules above, between and below; descriptions in accordion headers wrap under the title. The sidebar fills the panel's height. Linked sections get the ACC link-list arrow. Chips are sized to the text they label.
+- **Montserrat is bundled** (variable, latin + latin-ext, SIL OFL — see `assets/fonts/OFL.txt`), so the brand typeface renders on sites that don't load it, with no third-party font request.
+- **The Builder preview is now the real front end.** It was a hand-built JavaScript copy of the markup styled by a separate, stale copy of the CSS, so it never matched the site. It's now rendered by the plugin's PHP renderer (new `POST /iw-mega-menu/v1/preview` endpoint, `edit_theme_options`) inside an isolated frame that loads the same stylesheets as the site, including the theme's global styles. Desktop shows the 1200px layout scaled to fit; Mobile is a true 375px phone frame (the media queries really apply). Pattern sidebars render for real; Elementor-template sidebars show a labelled placeholder.
+- Mobile overlay: 44px touch targets, softer dividers, third level indented under a hairline.
+
+### v3.0.0
 
 #### Works without Elementor
 - **Elementor is now optional.** Menu markup moved out of the Elementor widget into a shared renderer (`includes/class-iw-mega-menu-renderer.php`). The "Elementor is required" admin notice is gone.

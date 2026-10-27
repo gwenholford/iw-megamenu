@@ -12,7 +12,36 @@
    yellow accents and a white focus ring. The nav bar inherits the context it
    sits in (--acc-* from the ACC theme; dark when absent), the dropdown is
    always light and the mobile overlay is always dark.
+
+   Isolation: every rule is scoped to .iw-mega-menu-wrapper and resets the
+   properties themes and page builders commonly put on bare `button` and `a`
+   (e.g. Elementor Kit button/link styles at `.elementor-kit-N button:hover`),
+   for every interactive state. Specificity stays below Elementor's
+   {{WRAPPER}} selectors, so the widget's own style controls still win.
    ========================================================================== */
+
+/* Montserrat (SIL Open Font License, assets/fonts/OFL.txt), bundled so the
+   brand typeface renders on sites that don't load it. On the ACC theme the
+   theme's own Montserrat is used instead. */
+@font-face {
+  font-family: "IW Montserrat";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(../fonts/montserrat-latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "IW Montserrat";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(../fonts/montserrat-latin-ext.woff2) format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ---------- Tokens ---------- */
 
 .iw-mega-menu-wrapper {
   /* Palette */
@@ -25,10 +54,11 @@
   --iw-dark-grey: var(--wp--preset--color--dark-grey, #5E5E5E);
   --iw-light-grey: var(--wp--preset--color--light-grey, #F4F2F5);
   --iw-white: var(--wp--preset--color--white, #FFFFFF);
+  --iw-rule: var(--wp--custom--color--dark-grey-50, rgba(94, 94, 94, 0.5));
   --iw-purple-gradient: var(--wp--preset--gradient--purple, linear-gradient(180deg, #4D1979 3.746%, #2E1A47 96.254%));
 
   /* Type (fluid sizes: SM 320px → LG 1200px) */
-  --iw-font: var(--wp--preset--font-family--montserrat, Montserrat, "Helvetica Neue", Arial, sans-serif);
+  --iw-font: var(--wp--preset--font-family--montserrat, "IW Montserrat", Montserrat, "Helvetica Neue", Arial, sans-serif);
   --iw-fs-h3: var(--wp--preset--font-size--h-3, clamp(22px, 16.909px + 1.5909vw, 36px));
   --iw-fs-body-xl: var(--wp--preset--font-size--body-xl, clamp(18px, 17.273px + 0.2273vw, 20px));
   --iw-fs-body-large: var(--wp--preset--font-size--body-large, clamp(16px, 15.273px + 0.2273vw, 18px));
@@ -49,6 +79,10 @@
   --iw-focus-offset: var(--wp--custom--focus--offset, 2px);
   --iw-transition: var(--wp--custom--transition, 300ms ease);
 
+  /* Item icons sit in a fixed box so text after them lines up. */
+  --iw-icon-box: 1.5rem;
+  --iw-icon-gap: 12px;
+
   /* Nav bar context */
   --iw-fg: var(--acc-fg, var(--iw-white));
   --iw-accent: var(--acc-accent, var(--iw-yellow));
@@ -56,63 +90,107 @@
 
   position: relative;
   font-family: var(--iw-font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.iw-mega-menu-wrapper :focus-visible {
-  outline: var(--iw-focus-width) solid var(--iw-focus);
-  outline-offset: var(--iw-focus-offset);
-}
+/* ---------- Isolation from theme / page-builder element styles ---------- */
 
-/* ---------- Nav bar ---------- */
-
-.iw-mega-menu__nav {
-  position: relative;
-  width: 100%;
-  background: transparent;
-}
-
-.iw-mega-menu__top-level {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  position: static;
+.iw-mega-menu-wrapper .iw-mega-menu__top-level,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-list,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-sublist,
+.iw-mega-menu-wrapper .iw-mega-menu__top-item,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-item {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.iw-mega-menu__top-item {
+.iw-mega-menu-wrapper .iw-mega-menu__top-link,
+.iw-mega-menu-wrapper .iw-mega-menu__section-label,
+.iw-mega-menu-wrapper .iw-mega-menu__third-link,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-link,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-toggle,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-close {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--iw-fg);
+  font-family: inherit;
+  font-style: normal;
+  letter-spacing: normal;
+  text-align: left;
+  text-decoration: none;
+  text-shadow: none;
+  text-transform: none;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.iw-mega-menu-wrapper :is(.iw-mega-menu__top-link, .iw-mega-menu__section-label, .iw-mega-menu__third-link, .iw-mega-menu__mobile-link):is(:hover, :focus, :active) {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--iw-fg);
+  text-decoration: none;
+}
+
+.iw-mega-menu-wrapper [class*="iw-mega-menu__"]:focus-visible {
+  outline: var(--iw-focus-width) solid var(--iw-focus);
+  outline-offset: var(--iw-focus-offset);
+}
+
+.iw-mega-menu-wrapper [class*="iw-mega-menu__"]:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---------- Nav bar ---------- */
+
+.iw-mega-menu-wrapper .iw-mega-menu__nav {
+  position: relative;
+  width: 100%;
+  background: transparent;
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu__top-level {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu__top-item {
   position: static;
 }
 
-.iw-mega-menu__top-link {
+.iw-mega-menu-wrapper .iw-mega-menu__top-link {
+  --iw-icon-box: 1.25rem;
+  --iw-icon-gap: 8px;
+
   position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   min-height: var(--iw-control-height);
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  color: var(--iw-fg);
-  font-family: inherit;
-  font-size: var(--iw-fs-body);
-  font-weight: 700;
+  padding: 10px 16px 12px;
+  font-size: var(--iw-fs-body-large);
+  font-weight: 600;
   line-height: 1.2;
-  text-align: left;
-  text-decoration: none;
-  text-transform: none;
-  cursor: pointer;
 }
 
-/* Accent underline: 1px on hover/focus, 3px while the dropdown is open. */
-.iw-mega-menu__top-link::after {
+/* Accent underline: 1px on hover/focus, 3px while its dropdown is open. */
+.iw-mega-menu-wrapper .iw-mega-menu__top-link::after {
   content: "";
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: 16px;
+  right: 16px;
   bottom: 4px;
   height: 1px;
   background: var(--iw-accent);
@@ -120,22 +198,23 @@
   transition: opacity var(--iw-transition), height var(--iw-transition);
 }
 
-.iw-mega-menu__top-link:hover::after,
-.iw-mega-menu__top-link:focus-visible::after {
+.iw-mega-menu-wrapper .iw-mega-menu__top-link:hover::after,
+.iw-mega-menu-wrapper .iw-mega-menu__top-link:focus-visible::after {
   opacity: 1;
 }
 
-.iw-mega-menu__top-link[aria-expanded="true"]::after {
+.iw-mega-menu-wrapper .iw-mega-menu__top-link[aria-expanded="true"]::after {
   height: var(--iw-border-hover);
   opacity: 1;
 }
 
-/* Chevron on items that open a dropdown; points up while open. */
-.iw-mega-menu__top-link[aria-haspopup] .iw-mega-menu__link-content::after {
+/* ACC chevron on items that open a dropdown; points up while open. */
+.iw-mega-menu-wrapper .iw-mega-menu__top-link[aria-haspopup] .iw-mega-menu__link-content::after {
   content: "";
   flex: none;
-  width: 8px;
-  height: 13px;
+  width: 7px;
+  height: 11px;
+  margin-left: 2px;
   background: currentcolor;
   -webkit-mask: url(../icons/chevron.svg) center / contain no-repeat;
   mask: url(../icons/chevron.svg) center / contain no-repeat;
@@ -143,101 +222,106 @@
   transition: transform var(--iw-transition);
 }
 
-.iw-mega-menu__top-link[aria-expanded="true"] .iw-mega-menu__link-content::after {
+.iw-mega-menu-wrapper .iw-mega-menu__top-link[aria-expanded="true"] .iw-mega-menu__link-content::after {
   transform: rotate(-90deg);
 }
 
 /* Icons and descriptions on the bar follow its context, whatever icon color is set. */
-.iw-mega-menu__top-link .iw-mega-menu__icon,
-.iw-mega-menu__top-link .iw-mega-menu__icon i,
-.iw-mega-menu__top-link .iw-mega-menu__icon svg {
+.iw-mega-menu-wrapper .iw-mega-menu__top-link .iw-mega-menu__icon,
+.iw-mega-menu-wrapper .iw-mega-menu__top-link .iw-mega-menu__icon i,
+.iw-mega-menu-wrapper .iw-mega-menu__top-link .iw-mega-menu__icon svg {
   color: var(--iw-fg) !important;
   fill: var(--iw-fg) !important;
 }
 
-.iw-mega-menu__top-link .iw-mega-menu__description {
+.iw-mega-menu-wrapper .iw-mega-menu__top-link .iw-mega-menu__description {
+  max-width: none;
   margin-top: 2px;
   color: inherit;
   font-size: var(--iw-fs-caption);
-  font-weight: 500;
+  opacity: 0.85;
 }
 
 /* ---------- Shared item parts ---------- */
 
-.iw-mega-menu__link-content {
+.iw-mega-menu-wrapper .iw-mega-menu__link-content {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--iw-icon-gap);
 }
 
-.iw-mega-menu__label {
+.iw-mega-menu-wrapper .iw-mega-menu__label {
   text-decoration-line: underline;
   text-decoration-color: transparent;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
-  transition: text-decoration-color var(--iw-transition), text-decoration-thickness var(--iw-transition);
+  transition: text-decoration-color var(--iw-transition);
 }
 
-.iw-mega-menu__description {
+.iw-mega-menu-wrapper :is(a.iw-mega-menu__section-label, .iw-mega-menu__accordion-toggle, .iw-mega-menu__third-link, .iw-mega-menu__mobile-link):hover .iw-mega-menu__label {
+  text-decoration-color: var(--iw-accent);
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu__description {
   display: block;
-  margin-top: 4px;
-  font-family: inherit;
-  font-size: var(--iw-fs-caption);
+  max-width: 46ch;
+  margin-top: 6px;
+  color: var(--iw-dark-grey);
+  font-size: var(--iw-fs-body);
   font-weight: 500;
   line-height: 1.5;
-  color: var(--iw-dark-grey);
 }
 
-.iw-mega-menu__icon {
+.iw-mega-menu-wrapper .iw-mega-menu__icon {
   display: inline-flex;
-  flex-shrink: 0;
+  flex: none;
   align-items: center;
   justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
-  font-size: 1.2rem;
-  overflow: visible;
-  vertical-align: middle;
+  width: var(--iw-icon-box);
+  height: var(--iw-icon-box);
+  font-size: calc(var(--iw-icon-box) * 0.84);
+  line-height: 1;
 }
 
-.iw-mega-menu__icon svg,
-.iw-mega-menu__icon i,
-.iw-mega-menu__icon img {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  font-size: 1rem;
-  vertical-align: middle;
+.iw-mega-menu-wrapper .iw-mega-menu__icon i,
+.iw-mega-menu-wrapper .iw-mega-menu__icon svg,
+.iw-mega-menu-wrapper .iw-mega-menu__icon img {
+  display: block;
+  width: 1em;
+  height: 1em;
+  font-size: 1em;
+  line-height: 1;
+  text-align: center;
 }
 
-/* Badge: the ACC "tag" (outlined, follows the text color) on the bar and in
-   the mobile overlay; the ACC "chip" (purple) inside the white dropdown. */
-.iw-mega-menu__badge {
+/* Badge: ACC "tag" (outlined, follows the text color) on the bar and in the
+   mobile overlay; ACC "chip" (purple) in the white dropdown. */
+.iw-mega-menu-wrapper .iw-mega-menu__badge {
   display: inline-block;
-  padding: 3px 10px;
+  flex: none;
+  padding: 4px 9px;
   border-radius: 20px;
   box-shadow: inset 0 0 0 1px currentcolor;
-  font-size: var(--iw-fs-caption);
+  font-size: 0.6875rem;
   font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: 0;
+  line-height: 1;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.iw-mega-menu__dropdown .iw-mega-menu__badge {
-  padding: 4px 8px;
+.iw-mega-menu-wrapper .iw-mega-menu__dropdown .iw-mega-menu__badge {
+  padding: 5px 8px;
   border-radius: 0;
   box-shadow: none;
   background: var(--iw-purple);
   color: var(--iw-white);
   letter-spacing: 0.1em;
-  line-height: 1.2;
 }
 
 /* ---------- Dropdown panel (light context) ---------- */
 
-.iw-mega-menu__dropdown {
+.iw-mega-menu-wrapper .iw-mega-menu__dropdown {
   --iw-fg: var(--iw-black);
   --iw-accent: var(--iw-orange);
   --iw-focus: var(--iw-black);
@@ -249,20 +333,22 @@
   z-index: 1002;
   box-sizing: border-box;
   width: 100%;
-  margin-top: 8px;
+  margin-top: 12px;
   padding: var(--iw-space-40);
   border-radius: var(--iw-radius);
   background: var(--iw-white);
   color: var(--iw-fg);
-  box-shadow: 0 20px 40px rgb(46 26 71 / 0.2);
+  box-shadow: 0 24px 48px -16px rgba(46, 26, 71, 0.35), 0 2px 8px rgba(46, 26, 71, 0.08);
+  font-family: var(--iw-font);
   font-size: var(--iw-fs-body);
   font-weight: 500;
   line-height: 1.5;
+  text-align: left;
 
   /* Closed: invisible and out of the tab order. Fades and slides in when opened. */
   visibility: hidden;
   opacity: 0;
-  transform: translateY(-12px);
+  transform: translateY(-8px);
   pointer-events: none;
   transition:
     opacity var(--iw-transition),
@@ -270,8 +356,8 @@
     visibility 0s linear 300ms;
 }
 
-.iw-mega-menu__dropdown:not([hidden]),
-.iw-mega-menu__dropdown.is-active {
+.iw-mega-menu-wrapper .iw-mega-menu__dropdown:not([hidden]),
+.iw-mega-menu-wrapper .iw-mega-menu__dropdown.is-active {
   visibility: visible;
   opacity: 1;
   transform: translateY(0);
@@ -279,167 +365,239 @@
   transition-delay: 0s;
 }
 
-.iw-mega-menu__dropdown--with-sidebar {
+.iw-mega-menu-wrapper .iw-mega-menu__dropdown--with-sidebar {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 30%);
+  align-items: stretch;
   gap: var(--iw-space-40);
 }
 
-.iw-mega-menu__dropdown--no-sidebar {
+.iw-mega-menu-wrapper .iw-mega-menu__dropdown--no-sidebar {
   display: block;
-  min-width: 0;
-  max-width: 100%;
 }
 
-.iw-mega-menu__dropdown-main {
+.iw-mega-menu-wrapper .iw-mega-menu__dropdown-main {
   display: flex;
   flex-direction: column;
-  gap: var(--iw-space-20);
   min-width: 0;
 }
 
-/* Hover bridge between the bar and the dropdown. */
-.iw-mega-menu__dropdown-buffer {
+/* Hover bridge across the gap between the bar and the dropdown. */
+.iw-mega-menu-wrapper .iw-mega-menu__dropdown-buffer {
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 1001;
   width: 100%;
-  height: 18px;
+  height: 20px;
   background: transparent;
   pointer-events: auto;
 }
 
-/* Second-level sections (no accordion): two columns. */
-.iw-mega-menu__second-list {
+/* Second-level sections: two balanced columns. */
+.iw-mega-menu-wrapper .iw-mega-menu__second-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--iw-space-20) var(--iw-space-40);
+  gap: var(--iw-space-30) var(--iw-space-40);
 }
 
-.iw-mega-menu__second-col {
+.iw-mega-menu-wrapper .iw-mega-menu__second-col {
   display: flex;
   flex-direction: column;
-  gap: var(--iw-space-20);
+  gap: var(--iw-space-30);
   min-width: 0;
 }
 
-.iw-mega-menu__section-label {
+.iw-mega-menu-wrapper .iw-mega-menu__section-label {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 0;
-  color: var(--iw-fg);
-  font-family: inherit;
   font-size: var(--iw-fs-body-xl);
   font-weight: 600;
   line-height: 1.3;
-  text-align: left;
-  text-decoration: none;
-  text-transform: none;
 }
 
-a.iw-mega-menu__section-label:hover .iw-mega-menu__label,
-.iw-mega-menu__accordion-toggle:hover .iw-mega-menu__label,
-.iw-mega-menu__third-link:hover .iw-mega-menu__label,
-.iw-mega-menu__mobile-link:hover .iw-mega-menu__label {
-  text-decoration-color: var(--iw-accent);
+.iw-mega-menu-wrapper div.iw-mega-menu__section-label {
+  cursor: default;
 }
 
-/* Accordion sections — ACC accordion: bold title, 1px dark-grey rule between
-   items, accent plus that turns into a close ×. */
-.iw-mega-menu__accordion {
+/* Descriptions and accordion links line up with the label text, not the icon. */
+.iw-mega-menu-wrapper .iw-mega-menu__section-label:has(> .iw-mega-menu__link-content > .iw-mega-menu__icon) > .iw-mega-menu__description,
+.iw-mega-menu-wrapper .iw-mega-menu__accordion:has(> .iw-mega-menu__accordion-toggle > .iw-mega-menu__link-content > .iw-mega-menu__icon) > .iw-mega-menu__section-content {
+  padding-left: calc(var(--iw-icon-box) + var(--iw-icon-gap));
+}
+
+/* Section titles flow as text, so a long title wraps naturally with its chip
+   and arrow after the last word. The icon hangs in the left padding, keeping
+   every line of the title aligned. (The renderer emits no whitespace between
+   these spans, so the hanging offsets are exact.) */
+.iw-mega-menu-wrapper .iw-mega-menu__section-label > .iw-mega-menu__link-content {
+  display: block;
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu__section-label > .iw-mega-menu__link-content:has(> .iw-mega-menu__icon) {
+  padding-left: calc(var(--iw-icon-box) + var(--iw-icon-gap));
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu__section-label > .iw-mega-menu__link-content > .iw-mega-menu__icon {
+  margin-left: calc(-1 * (var(--iw-icon-box) + var(--iw-icon-gap)));
+  margin-right: var(--iw-icon-gap);
+  vertical-align: middle;
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu__section-label > .iw-mega-menu__link-content > .iw-mega-menu__badge {
+  margin-left: 10px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* ACC link-list arrow right after a linked section's title (inline-block, so the
+   title's hover underline skips it); slides right on hover. */
+.iw-mega-menu-wrapper a.iw-mega-menu__section-label .iw-mega-menu__label::after {
+  content: "";
+  display: inline-block;
+  width: 0.7em;
+  height: 0.6em;
+  margin-left: 8px;
+  vertical-align: middle;
+  background: var(--iw-accent);
+  -webkit-mask: url(../icons/arrow.svg) center / contain no-repeat;
+  mask: url(../icons/arrow.svg) center / contain no-repeat;
+  transition: transform var(--iw-transition);
+}
+
+.iw-mega-menu-wrapper a.iw-mega-menu__section-label:hover .iw-mega-menu__label::after {
+  transform: translateX(6px);
+}
+
+/* Accordion sections — ACC accordion: hairline rules, accent plus that turns into a close ×. */
+.iw-mega-menu-wrapper .iw-mega-menu__accordion {
   margin: 0;
+  border-top: 1px solid var(--iw-rule);
 }
 
-.iw-mega-menu__second-list + .iw-mega-menu__accordion,
-.iw-mega-menu__accordion + .iw-mega-menu__accordion {
-  border-top: 1px solid var(--iw-dark-grey);
+.iw-mega-menu-wrapper .iw-mega-menu__accordion:last-child {
+  border-bottom: 1px solid var(--iw-rule);
 }
 
-.iw-mega-menu__accordion-toggle {
+.iw-mega-menu-wrapper .iw-mega-menu__second-list + .iw-mega-menu__accordion {
+  margin-top: var(--iw-space-30);
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu__accordion-toggle {
   display: flex;
   flex-direction: row; /* overrides the section-label column */
   flex-wrap: wrap;
   align-items: center;
-  column-gap: var(--iw-space-30);
+  column-gap: var(--iw-space-20);
   width: 100%;
   padding: var(--iw-space-20) 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  color: var(--iw-fg);
-  font-size: var(--iw-fs-body);
-  font-weight: 700;
-  cursor: pointer;
 }
 
-.iw-mega-menu__accordion-toggle .iw-mega-menu__link-content {
-  flex: 1 1 auto;
+.iw-mega-menu-wrapper .iw-mega-menu__accordion-toggle .iw-mega-menu__link-content {
+  flex: 1 1 0;
   min-width: 0;
 }
 
-.iw-mega-menu__accordion-toggle .iw-mega-menu__caret {
+.iw-mega-menu-wrapper .iw-mega-menu__accordion-toggle .iw-mega-menu__caret {
   order: 1;
-  margin-left: auto;
 }
 
-/* Full-width basis puts the description on its own line under the title. */
-.iw-mega-menu__accordion-toggle .iw-mega-menu__description {
-  flex: 1 1 100%;
+/* Full-width basis puts the description on its own line under the title
+   (max-width has to go, or it caps the basis and the line never wraps). */
+.iw-mega-menu-wrapper .iw-mega-menu__accordion-toggle .iw-mega-menu__description {
+  flex: 0 0 100%;
   order: 2;
+  max-width: none;
+  margin-top: 4px;
 }
 
-.iw-mega-menu__section-content {
-  padding: 0 0 var(--iw-space-20);
+.iw-mega-menu-wrapper .iw-mega-menu__accordion-toggle:has(.iw-mega-menu__icon) .iw-mega-menu__description {
+  padding-left: calc(var(--iw-icon-box) + var(--iw-icon-gap));
 }
 
-.iw-mega-menu__section-content[hidden] {
+.iw-mega-menu-wrapper .iw-mega-menu__section-content {
+  padding-bottom: var(--iw-space-30);
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu__section-content[hidden] {
   display: none;
 }
 
-/* Third-level links: three columns. */
-.iw-mega-menu__third-list {
+/* Third-level links: three balanced columns. */
+.iw-mega-menu-wrapper .iw-mega-menu__third-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px var(--iw-space-30);
+  gap: 14px var(--iw-space-30);
 }
 
-.iw-mega-menu__third-col {
+.iw-mega-menu-wrapper .iw-mega-menu__third-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
 }
 
-.iw-mega-menu__third-link {
+.iw-mega-menu-wrapper .iw-mega-menu__third-link {
   display: flex;
-  flex-direction: column;
   padding: 0;
-  color: var(--iw-fg);
-  font-family: inherit;
   font-size: var(--iw-fs-body);
   font-weight: 500;
-  line-height: 1.5;
-  text-decoration: none;
-  text-transform: none;
+  line-height: 1.4;
 }
 
 /* Sidebar */
-.iw-mega-menu-sidebar {
+.iw-mega-menu-wrapper .iw-mega-menu-sidebar {
   box-sizing: border-box;
-  max-width: 100%;
-  min-width: 220px;
+  min-width: 0;
   padding: var(--iw-space-30);
   border-radius: var(--iw-radius);
   background: var(--iw-light-grey);
+  color: var(--iw-black);
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu-sidebar > :first-child {
+  margin-top: 0;
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu-sidebar > :last-child {
+  margin-bottom: 0;
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu-sidebar img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Builder preview stand-in for an Elementor template sidebar. */
+.iw-mega-menu-wrapper .iw-mega-menu-sidebar__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 160px;
+  padding: var(--iw-space-20);
+  border: var(--iw-border) dashed var(--iw-rule);
+  border-radius: 8px;
+  color: var(--iw-dark-grey);
+  font-size: var(--iw-fs-caption);
+  text-align: center;
+}
+
+.iw-mega-menu-wrapper .iw-mega-menu-sidebar__placeholder strong {
+  color: var(--iw-black);
+  font-size: var(--iw-fs-body);
 }
 
 /* ---------- Disclosure icon (accordions, mobile sublists) ---------- */
 
-.iw-mega-menu__caret,
-.iw-mega-menu__mobile-caret {
+.iw-mega-menu-wrapper .iw-mega-menu__caret,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-caret {
   position: relative;
   flex: none;
   width: 24px;
@@ -448,62 +606,61 @@ a.iw-mega-menu__section-label:hover .iw-mega-menu__label,
   transition: transform var(--iw-transition);
 }
 
-.iw-mega-menu__caret::before,
-.iw-mega-menu__caret::after,
-.iw-mega-menu__mobile-caret::before,
-.iw-mega-menu__mobile-caret::after {
+.iw-mega-menu-wrapper .iw-mega-menu__caret::before,
+.iw-mega-menu-wrapper .iw-mega-menu__caret::after,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-caret::before,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-caret::after {
   content: "";
   position: absolute;
   top: 50%;
-  left: 0;
-  width: 100%;
+  left: 3px;
+  right: 3px;
   height: 2px;
   margin-top: -1px;
   background: currentcolor;
 }
 
-.iw-mega-menu__caret::after,
-.iw-mega-menu__mobile-caret::after {
+.iw-mega-menu-wrapper .iw-mega-menu__caret::after,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-caret::after {
   transform: rotate(90deg);
 }
 
-[aria-expanded="true"] > .iw-mega-menu__caret,
-[aria-expanded="true"] > .iw-mega-menu__mobile-caret {
+.iw-mega-menu-wrapper [aria-expanded="true"] > .iw-mega-menu__caret,
+.iw-mega-menu-wrapper [aria-expanded="true"] > .iw-mega-menu__mobile-caret {
   transform: rotate(45deg);
 }
 
 /* ---------- Icon colors (ACC palette) ----------
-   The nested i/svg selectors are load-bearing: the Elementor widget's global
-   "Icon Color" control targets `.iw-mega-menu__icon i` directly, and a direct
-   rule on the child beats an inherited color, even an !important one.
-   Teal, blue and red are not ACC brand colors; menus saved with them render
-   in the nearest brand color. */
-.icon-acc-purple,      .icon-acc-purple i,      .icon-acc-purple svg      { color: var(--iw-purple) !important; fill: var(--iw-purple) !important; }
-.icon-acc-purple-dark, .icon-acc-purple-dark i, .icon-acc-purple-dark svg { color: var(--iw-dark-purple) !important; fill: var(--iw-dark-purple) !important; }
-.icon-acc-orange,      .icon-acc-orange i,      .icon-acc-orange svg      { color: var(--iw-orange) !important; fill: var(--iw-orange) !important; }
-.icon-acc-yellow,      .icon-acc-yellow i,      .icon-acc-yellow svg      { color: var(--iw-yellow) !important; fill: var(--iw-yellow) !important; }
-.icon-acc-lime,        .icon-acc-lime i,        .icon-acc-lime svg        { color: var(--iw-lime) !important; fill: var(--iw-lime) !important; }
-.icon-acc-black,       .icon-acc-black i,       .icon-acc-black svg       { color: var(--iw-black) !important; fill: var(--iw-black) !important; }
-.icon-acc-grey,        .icon-acc-grey i,        .icon-acc-grey svg        { color: var(--iw-dark-grey) !important; fill: var(--iw-dark-grey) !important; }
+   Global rather than wrapper-scoped: the builder's tree rows and color
+   swatches use these classes too. The nested i/svg selectors are load-bearing:
+   the Elementor widget's "Icon Color" control targets `.iw-mega-menu__icon i`
+   directly, and a direct rule on the child beats an inherited color, even an
+   !important one. Teal, blue and red are not ACC brand colors; menus saved
+   with them render in the nearest brand color. */
+.icon-acc-purple,      .icon-acc-purple i,      .icon-acc-purple svg,
 .icon-acc-teal,        .icon-acc-teal i,        .icon-acc-teal svg,
-.icon-acc-blue-light,  .icon-acc-blue-light i,  .icon-acc-blue-light svg  { color: var(--iw-purple) !important; fill: var(--iw-purple) !important; }
-.icon-acc-blue-dark,   .icon-acc-blue-dark i,   .icon-acc-blue-dark svg   { color: var(--iw-dark-purple) !important; fill: var(--iw-dark-purple) !important; }
-.icon-acc-red,         .icon-acc-red i,         .icon-acc-red svg         { color: var(--iw-orange) !important; fill: var(--iw-orange) !important; }
+.icon-acc-blue-light,  .icon-acc-blue-light i,  .icon-acc-blue-light svg  { color: var(--wp--preset--color--purple, #4D1979) !important; fill: var(--wp--preset--color--purple, #4D1979) !important; }
+.icon-acc-purple-dark, .icon-acc-purple-dark i, .icon-acc-purple-dark svg,
+.icon-acc-blue-dark,   .icon-acc-blue-dark i,   .icon-acc-blue-dark svg   { color: var(--wp--preset--color--dark-purple, #2E1A47) !important; fill: var(--wp--preset--color--dark-purple, #2E1A47) !important; }
+.icon-acc-orange,      .icon-acc-orange i,      .icon-acc-orange svg,
+.icon-acc-red,         .icon-acc-red i,         .icon-acc-red svg         { color: var(--wp--preset--color--orange, #D23F00) !important; fill: var(--wp--preset--color--orange, #D23F00) !important; }
+.icon-acc-yellow,      .icon-acc-yellow i,      .icon-acc-yellow svg      { color: var(--wp--preset--color--yellow, #F0B323) !important; fill: var(--wp--preset--color--yellow, #F0B323) !important; }
+.icon-acc-lime,        .icon-acc-lime i,        .icon-acc-lime svg        { color: var(--wp--preset--color--lime, #C1D82F) !important; fill: var(--wp--preset--color--lime, #C1D82F) !important; }
+.icon-acc-black,       .icon-acc-black i,       .icon-acc-black svg       { color: var(--wp--preset--color--black, #000000) !important; fill: var(--wp--preset--color--black, #000000) !important; }
+.icon-acc-grey,        .icon-acc-grey i,        .icon-acc-grey svg        { color: var(--wp--preset--color--dark-grey, #5E5E5E) !important; fill: var(--wp--preset--color--dark-grey, #5E5E5E) !important; }
 
 /* ---------- Mobile: MENU pill and overlay ---------- */
 
-/* MENU pill — matches the ACC header's menu button: orange, CTA type, yellow
-   ring on hover. The close button inside the overlay is its × twin. */
-.iw-mega-menu__mobile-toggle,
-.iw-mega-menu__mobile-close {
+/* MENU pill — the ACC header's menu button: orange, CTA type, yellow ring on
+   hover. The close button inside the overlay is its × twin. */
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-toggle,
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-sizing: border-box;
   min-height: var(--iw-control-height);
   padding: 0 18px;
-  border: 0;
   border-radius: 50px;
   background: var(--iw-orange);
   color: var(--iw-white);
@@ -512,21 +669,25 @@ a.iw-mega-menu__section-label:hover .iw-mega-menu__label,
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
-  cursor: pointer;
   box-shadow: inset 0 0 0 0 var(--iw-yellow);
   transition: box-shadow var(--iw-transition);
 }
 
-.iw-mega-menu__mobile-toggle {
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-toggle {
   display: none;
 }
 
-.iw-mega-menu__mobile-toggle:hover,
-.iw-mega-menu__mobile-close:hover {
+.iw-mega-menu-wrapper :is(.iw-mega-menu__mobile-toggle, .iw-mega-menu__mobile-close):is(:hover, :focus, :active) {
+  border: 0;
+  background: var(--iw-orange);
+  color: var(--iw-white);
+}
+
+.iw-mega-menu-wrapper :is(.iw-mega-menu__mobile-toggle, .iw-mega-menu__mobile-close):hover {
   box-shadow: inset 0 0 0 var(--iw-border) var(--iw-yellow);
 }
 
-.iw-mega-menu__mobile-button-icon {
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-button-icon {
   flex: none;
   width: 16px;
   height: 14px;
@@ -535,14 +696,14 @@ a.iw-mega-menu__section-label:hover .iw-mega-menu__label,
   mask: url(../icons/menu.svg) center / 16px 16px no-repeat;
 }
 
-.iw-mega-menu__mobile-close .iw-mega-menu__mobile-button-icon {
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-close .iw-mega-menu__mobile-button-icon {
   width: 14px;
   height: 14px;
   -webkit-mask: url(../icons/close.svg) center / contain no-repeat;
   mask: url(../icons/close.svg) center / contain no-repeat;
 }
 
-.iw-mega-menu__mobile-panel {
+.iw-mega-menu-wrapper .iw-mega-menu__mobile-panel {
   display: none;
 }
 
@@ -557,24 +718,28 @@ body.iw-mega-menu-mobile-open {
    ========================================================================== */
 
 @media (min-width: 700px) and (max-width: 1199px) {
-  .iw-mega-menu__dropdown--with-sidebar {
-    grid-template-columns: 65% 35%;
+  .iw-mega-menu-wrapper .iw-mega-menu__dropdown {
+    padding: var(--iw-space-30);
+  }
+
+  .iw-mega-menu-wrapper .iw-mega-menu__dropdown--with-sidebar {
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 34%);
     gap: var(--iw-space-30);
   }
 
-  .iw-mega-menu__third-list {
+  .iw-mega-menu-wrapper .iw-mega-menu__third-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 699px) {
-  .iw-mega-menu__nav {
+  .iw-mega-menu-wrapper .iw-mega-menu__nav {
     display: none !important;
   }
 
-  /* Small screens: icon-only circle, as in the ACC header. The text stays the accessible name. */
-  .iw-mega-menu__mobile-toggle,
-  .iw-mega-menu__mobile-close {
+  /* Icon-only circles, as in the ACC header. The text stays the accessible name. */
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-toggle,
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-close {
     display: inline-flex;
     width: var(--iw-control-height);
     padding: 0;
@@ -583,127 +748,109 @@ body.iw-mega-menu-mobile-open {
   }
 
   /* Overlay — ACC menu panel: purple gradient, white text, yellow accents. */
-  .iw-mega-menu__mobile-panel {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-panel {
     --iw-fg: var(--iw-white);
     --iw-accent: var(--iw-yellow);
     --iw-focus: var(--iw-white);
 
     display: block;
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     z-index: 999999;
     box-sizing: border-box;
     width: 100vw;
     height: 100vh;
     height: 100dvh;
-    max-height: 100vh;
-    max-height: 100dvh;
     padding-bottom: var(--iw-space-40);
     overflow-y: auto;
+    overscroll-behavior: contain;
     background: var(--iw-purple-gradient);
     color: var(--iw-fg);
+    font-family: var(--iw-font);
+    text-align: left;
   }
 
-  .iw-mega-menu__mobile-panel[hidden] {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-panel[hidden] {
     display: none !important;
   }
 
-  .iw-mega-menu__mobile-topbar {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-topbar {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     box-sizing: border-box;
-    width: 100%;
+    min-height: 62px;
     padding: 10px var(--iw-gutter);
   }
 
-  .iw-mega-menu__mobile-list,
-  .iw-mega-menu__mobile-sublist {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .iw-mega-menu__mobile-list {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-list {
     padding: 0 var(--iw-gutter);
   }
 
-  /* Primary items: H3 size, 1px white rule between. */
-  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item {
-    padding-block: clamp(16px, 12.364px + 1.1364vw, 30px);
-    border-bottom: 1px solid var(--iw-white);
+  /* Primary items: H3 size, white rule between. */
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item {
+    padding-block: var(--iw-space-20);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
   }
 
-  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item:last-child {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item:last-child {
     border-bottom: 0;
   }
 
-  .iw-mega-menu__mobile-link {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-link {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--iw-space-20);
-    box-sizing: border-box;
     width: 100%;
+    min-height: var(--iw-control-height);
     padding: 0;
-    border: 0;
-    background: none;
-    color: inherit;
-    font-family: inherit;
     font-size: var(--iw-fs-body);
     font-weight: 500;
-    line-height: 1.5;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
+    line-height: 1.4;
   }
 
-  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
     font-size: var(--iw-fs-h3);
     font-weight: 400;
     line-height: 1.2;
   }
 
-  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link .iw-mega-menu__mobile-caret {
-    width: 32px;
-    height: 32px;
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link .iw-mega-menu__mobile-caret {
+    width: 28px;
+    height: 28px;
   }
 
-  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link .iw-mega-menu__mobile-caret::before,
-  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link .iw-mega-menu__mobile-caret::after {
-    left: 4px;
-    width: auto;
-    right: 4px;
-  }
-
-  .iw-mega-menu__mobile-sublist {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-sublist {
     display: flex;
     flex-direction: column;
-    gap: var(--iw-space-20);
-    padding-top: var(--iw-space-20);
+    gap: 4px;
+    padding: 8px 0 4px;
   }
 
-  .iw-mega-menu__mobile-sublist[hidden] {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-sublist[hidden] {
     display: none;
   }
 
-  .iw-mega-menu__mobile-sublist > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-sublist > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
     font-size: var(--iw-fs-body-xl);
   }
 
-  .iw-mega-menu__mobile-sublist .iw-mega-menu__mobile-sublist {
-    padding-left: var(--iw-space-20);
+  /* Third level: indented under a hairline. */
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-sublist .iw-mega-menu__mobile-sublist {
+    margin: 4px 0 8px 2px;
+    padding: 0 0 0 var(--iw-space-20);
+    border-left: 1px solid rgba(255, 255, 255, 0.4);
   }
 
-  .iw-mega-menu__mobile-sublist .iw-mega-menu__mobile-sublist > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-sublist .iw-mega-menu__mobile-sublist > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
     font-size: var(--iw-fs-body);
   }
 
   /* Sidebar — ACC ancillary card: 1px white border, card radius. */
-  .iw-mega-menu__mobile-sidebar {
+  .iw-mega-menu-wrapper .iw-mega-menu__mobile-sidebar {
     margin: var(--iw-space-30) var(--iw-gutter) 0;
-    padding: clamp(20px, 17.727px + 0.7102vw, 30px);
+    padding: var(--iw-space-20);
     border: 1px solid var(--iw-white);
     border-radius: var(--iw-radius);
   }

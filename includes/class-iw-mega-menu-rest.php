@@ -82,6 +82,13 @@ class IW_Mega_Menu_REST {
 			'permission_callback' => [ $this, 'check_permission' ],
 		] );
 
+		// Builder preview: the real front-end markup for an unsaved tree.
+		register_rest_route( $namespace, '/preview', [
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => [ $this, 'render_preview' ],
+			'permission_callback' => [ $this, 'check_permission' ],
+		] );
+
 		register_rest_route( $namespace, '/wp-menus', [
 			'methods'             => WP_REST_Server::READABLE,
 			'callback'            => [ $this, 'get_wp_menus' ],
@@ -227,6 +234,25 @@ class IW_Mega_Menu_REST {
 		return rest_ensure_response( [
 			'id'      => $post_id,
 			'message' => 'Menu deleted',
+		] );
+	}
+
+	/**
+	 * Render the builder's working copy with the front-end renderer, so the
+	 * preview is the same markup the site will output.
+	 */
+	public function render_preview( $request ) {
+		$data     = $request->get_param( 'data' );
+		$items    = isset( $data['items'] ) && is_array( $data['items'] ) ? $data['items'] : [];
+		$settings = isset( $data['settings'] ) && is_array( $data['settings'] ) ? $data['settings'] : [];
+
+		return rest_ensure_response( [
+			'html' => IW_Mega_Menu_Renderer::render( $items, [
+				'uid'        => 'preview',
+				'label'      => __( 'Preview Navigation', 'iw-mega-menu' ),
+				'sidebar_id' => $settings['global_sidebar_template_id'] ?? '',
+				'preview'    => true,
+			] ),
 		] );
 	}
 
