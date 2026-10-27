@@ -1,6 +1,6 @@
 /**
  * IW Mega Menu Admin Builder Styles
- * @version 2.0.0
+ * @version 3.0.0
  */
 
 /* ── Base Layout ── */
@@ -234,8 +234,8 @@
 }
 
 .iw-depth-0 { border-left: 4px solid #4D1979; }
-.iw-depth-1 { border-left: 4px solid #00B2A9; margin-left: 0; }
-.iw-depth-2 { border-left: 4px solid #6787B7; margin-left: 0; }
+.iw-depth-1 { border-left: 4px solid #D23F00; margin-left: 0; }
+.iw-depth-2 { border-left: 4px solid #5E5E5E; margin-left: 0; }
 
 .iw-tree-item.is-editing {
 	box-shadow: 0 0 0 2px #2271b1;
@@ -309,8 +309,8 @@
 }
 
 .iw-depth-0 > .iw-tree-item-header .iw-tree-item-type { background: #4D1979; color: #fff; }
-.iw-depth-1 > .iw-tree-item-header .iw-tree-item-type { background: #00B2A9; color: #fff; }
-.iw-depth-2 > .iw-tree-item-header .iw-tree-item-type { background: #6787B7; color: #fff; }
+.iw-depth-1 > .iw-tree-item-header .iw-tree-item-type { background: #D23F00; color: #fff; }
+.iw-depth-2 > .iw-tree-item-header .iw-tree-item-type { background: #5E5E5E; color: #fff; }
 
 .iw-tree-item-label {
 	font-weight: 500;

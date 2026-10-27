@@ -24,8 +24,8 @@ class IW_Mega_Menu_Admin {
 	 */
 	public function register_admin_page() {
 		add_menu_page(
-			__( 'IW Mega Menu', 'iw-megamenu' ),
-			__( 'IW Mega Menu', 'iw-megamenu' ),
+			__( 'IW Mega Menu', 'iw-mega-menu' ),
+			__( 'IW Mega Menu', 'iw-mega-menu' ),
 			'edit_theme_options',
 			'iw-mega-menu',
 			[ $this, 'render_admin_page' ],
@@ -59,7 +59,7 @@ class IW_Mega_Menu_Admin {
 			[ 'dashicons', 'font-awesome-6' ],
 			file_exists( $plugin_dir . 'assets/admin/css/iw-admin-builder.css' )
 				? filemtime( $plugin_dir . 'assets/admin/css/iw-admin-builder.css' )
-				: '2.0.0'
+				: IW_MEGA_MENU_VERSION
 		);
 
 		wp_enqueue_style(
@@ -68,7 +68,7 @@ class IW_Mega_Menu_Admin {
 			[],
 			file_exists( $plugin_dir . 'assets/css/iw-megamenu.css' )
 				? filemtime( $plugin_dir . 'assets/css/iw-megamenu.css' )
-				: '2.0.0'
+				: IW_MEGA_MENU_VERSION
 		);
 
 		wp_enqueue_script(
@@ -77,7 +77,7 @@ class IW_Mega_Menu_Admin {
 			[ 'wp-api-fetch' ],
 			file_exists( $plugin_dir . 'assets/admin/js/iw-admin-builder.js' )
 				? filemtime( $plugin_dir . 'assets/admin/js/iw-admin-builder.js' )
-				: '2.0.0',
+				: IW_MEGA_MENU_VERSION,
 			true
 		);
 
@@ -93,14 +93,14 @@ class IW_Mega_Menu_Admin {
 	public function render_admin_page() {
 		?>
 		<div class="wrap iw-mega-menu-admin-wrap">
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'IW Mega Menu Builder', 'iw-megamenu' ); ?></h1>
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'IW Mega Menu Builder', 'iw-mega-menu' ); ?></h1>
 			<hr class="wp-header-end">
 			<p class="description">
-				<?php esc_html_e( 'Build multi-level navigation menus with dropdowns, accordions, and sidebar content, then assign the finished menu to the IW Mega Menu widget in Elementor.', 'iw-megamenu' ); ?>
+				<?php esc_html_e( 'Build multi-level navigation menus with dropdowns, accordions, and sidebar content, then place the finished menu with the IW Mega Menu block, the [iw_mega_menu] shortcode, the iw_mega_menu() template tag, or the Elementor widget.', 'iw-mega-menu' ); ?>
 			</p>
 			<div id="iw-mega-menu-builder-root">
 				<!-- Vanilla JS app will mount here -->
-				<p>Loading builder...</p>
+				<p><?php esc_html_e( 'Loading builder...', 'iw-mega-menu' ); ?></p>
 			</div>
 		</div>
 		<?php

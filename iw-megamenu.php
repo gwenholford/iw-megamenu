@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: IW Mega Menu
- * Description: A powerful, accessible, and Elementor-optimized Mega Menu plugin with multi-level navigation and widget support. Developed for Austin Community College - Instructional Web Projects.
- * Version: 2.0.0
+ * Description: An accessible, multi-level mega menu for any WordPress site. Build menus in the dashboard, then place them with the IW Mega Menu block, the [iw_mega_menu] shortcode, the iw_mega_menu() template tag, or the optional Elementor widget. Developed for Austin Community College - Instructional Web Projects.
+ * Version: 3.0.0
  * Author: Austin Community College - Instructional Web Projects
  * Author URI: https://instruction.austincc.edu
  * Plugin URI: https://github.com/gwenholford/iw-megamenu
@@ -33,7 +33,7 @@ if ( defined( 'IW_MEGA_MENU_VERSION' ) ) {
 }
 
 // Define Plugin Constants
-define( 'IW_MEGA_MENU_VERSION', '2.0.0' );
+define( 'IW_MEGA_MENU_VERSION', '3.0.0' );
 define( 'IW_MEGA_MENU_FILE', __FILE__ );
 define( 'IW_MEGA_MENU_PATH', plugin_dir_path( __FILE__ ) );
 define( 'IW_MEGA_MENU_URL', plugin_dir_url( __FILE__ ) );
@@ -70,34 +70,36 @@ final class IW_Mega_Menu {
     }
 
     /**
-     * Initialize WordPress and Elementor hooks
+     * Initialize WordPress hooks
      */
     private function init_hooks() {
         // Load translation text domain
         add_action( 'init', [ $this, 'load_textdomain' ] );
 
-        // Register frontend assets
-        add_action( 'wp_enqueue_scripts', [ $this, 'register_assets' ] );
+        // Register front-end assets early so the block's style handle resolves.
+        add_action( 'init', [ $this, 'register_assets' ], 5 );
 
-        // Initialize Core v2.0.0 Modules
         $this->init_core_modules();
 
-        // Elementor widget registration
+        // Optional Elementor widget, for sites that use Elementor.
         if ( did_action( 'elementor/loaded' ) ) {
             $this->init_elementor();
         } else {
             add_action( 'elementor/loaded', [ $this, 'init_elementor' ] );
-            add_action( 'admin_notices', [ $this, 'admin_notice_missing_elementor' ] );
         }
     }
 
     /**
-     * Initialize Core v2.0.0 Modules
+     * Initialize Core Modules
      */
     private function init_core_modules() {
+        require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-renderer.php';
         require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-cpt.php';
         require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-rest.php';
         require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-admin.php';
+        require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-block.php';
+        require_once IW_MEGA_MENU_PATH . 'includes/class-iw-mega-menu-shortcode.php';
+        require_once IW_MEGA_MENU_PATH . 'includes/template-tags.php';
 
         $cpt = new IW_Mega_Menu_CPT();
         $cpt->init();
@@ -107,6 +109,12 @@ final class IW_Mega_Menu {
 
         $admin = new IW_Mega_Menu_Admin();
         $admin->init();
+
+        $block = new IW_Mega_Menu_Block();
+        $block->init();
+
+        $shortcode = new IW_Mega_Menu_Shortcode();
+        $shortcode->init();
     }
 
     /**
@@ -121,7 +129,7 @@ final class IW_Mega_Menu {
     }
 
     /**
-     * Register CSS and JS assets conditionally
+     * Register CSS and JS assets. The renderer enqueues them when a menu is output.
      */
     public function register_assets() {
         $css_file = file_exists( IW_MEGA_MENU_PATH . 'assets/css/iw-megamenu.css' )
@@ -142,6 +150,24 @@ final class IW_Mega_Menu {
             IW_MEGA_MENU_VERSION,
             true
         );
+
+        /**
+         * Filter the Font Awesome 6 stylesheet loaded for menu item icons.
+         * Return an empty string if the theme already loads Font Awesome 6.
+         *
+         * @param string $url Stylesheet URL.
+         */
+        $font_awesome_url = apply_filters(
+            'iw_mega_menu_font_awesome_url',
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
+        );
+
+        wp_register_style(
+            'iw-mega-menu-font-awesome',
+            $font_awesome_url ? $font_awesome_url : false,
+            [],
+            '6.5.1'
+        );
     }
 
     /**
@@ -151,8 +177,10 @@ final class IW_Mega_Menu {
         // Modern Elementor 3.5+ widget registration action
         add_action( 'elementor/widgets/register', [ $this, 'register_widgets' ] );
 
-        // Backward compatibility fallback for older Elementor versions (< 3.5.0)
-        add_action( 'elementor/widgets/widgets_registered', [ $this, 'register_widgets_legacy' ] );
+        // Elementor < 3.5.0 only. Newer versions flag any listener on this hook as deprecated.
+        if ( defined( 'ELEMENTOR_VERSION' ) && version_compare( ELEMENTOR_VERSION, '3.5.0', '<' ) ) {
+            add_action( 'elementor/widgets/widgets_registered', [ $this, 'register_widgets_legacy' ] );
+        }
     }
 
     /**
@@ -176,28 +204,6 @@ final class IW_Mega_Menu {
         if ( class_exists( '\Elementor\Plugin' ) && isset( \Elementor\Plugin::instance()->widgets_manager ) ) {
             \Elementor\Plugin::instance()->widgets_manager->register_widget_type( new \IW_Mega_Menu_Widget() );
         }
-    }
-
-    /**
-     * Admin notice if Elementor is not installed or activated
-     */
-    public function admin_notice_missing_elementor() {
-        if ( did_action( 'elementor/loaded' ) ) {
-            return;
-        }
-
-        if ( ! current_user_can( 'activate_plugins' ) ) {
-            return;
-        }
-
-        $message = sprintf(
-            /* translators: 1: Plugin Name, 2: Elementor */
-            esc_html__( '"%1$s" requires "%2$s" to be installed and activated.', 'iw-mega-menu' ),
-            '<strong>' . esc_html__( 'IW Mega Menu', 'iw-mega-menu' ) . '</strong>',
-            '<strong>' . esc_html__( 'Elementor', 'iw-mega-menu' ) . '</strong>'
-        );
-
-        printf( '<div class="notice notice-error"><p>%s</p></div>', wp_kses_post( $message ) );
     }
 }
 

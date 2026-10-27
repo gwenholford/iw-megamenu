@@ -3,7 +3,9 @@
  *
  * Provides accessible keyboard navigation, mouse buffer handling, touch support,
  * mobile modal dialog drawer with focus trapping, and accordion toggling.
- * Fully compatible with Elementor Frontend lifecycle and standalone rendering.
+ * Works wherever the menu is rendered (block, shortcode, template tag) and with
+ * the Elementor widget's frontend lifecycle. Open/closed visuals are driven by
+ * the hidden and aria-expanded attributes in CSS.
  *
  * @package IW_Mega_Menu
  */
@@ -43,12 +45,7 @@
         $buffers.prop('hidden', true);
 
         function hideAllDropdowns() {
-            $dropdowns.each(function() {
-                var $dd = $(this);
-                $dd.prop('hidden', true)
-                   .removeClass('is-active')
-                   .css({ opacity: 0, transform: 'translateY(-12px)', pointerEvents: 'none' });
-            });
+            $dropdowns.prop('hidden', true).removeClass('is-active');
             $buffers.prop('hidden', true);
             self.$nav.find('.iw-mega-menu__top-link[aria-expanded="true"]')
                      .attr('aria-expanded', 'false');
@@ -57,9 +54,7 @@
         function showDropdown($item, $btn, $dropdown, $buffer) {
             hideAllDropdowns();
             if ($dropdown.length) {
-                $dropdown.prop('hidden', false)
-                         .addClass('is-active')
-                         .css({ opacity: 1, transform: 'translateY(0)', pointerEvents: 'auto' });
+                $dropdown.prop('hidden', false).addClass('is-active');
             }
             if ($buffer && $buffer.length) {
                 $buffer.prop('hidden', false);
@@ -81,9 +76,7 @@
             var scheduleHide = function() {
                 hideTimeout = setTimeout(function() {
                     if ($dropdown.length) {
-                        $dropdown.prop('hidden', true)
-                                 .removeClass('is-active')
-                                 .css({ opacity: 0, transform: 'translateY(-12px)', pointerEvents: 'none' });
+                        $dropdown.prop('hidden', true).removeClass('is-active');
                     }
                     if ($buffer && $buffer.length) {
                         $buffer.prop('hidden', true);
@@ -191,29 +184,12 @@
                 return;
             }
 
+            // The plus/close icon turns via CSS on aria-expanded.
             $toggle.off('click.iwAccordion').on('click.iwAccordion', function(e) {
                 e.preventDefault();
                 var isExpanded = $toggle.attr('aria-expanded') === 'true';
-                var $caret = $toggle.find('.iw-mega-menu__caret i, .iw-mega-menu__mobile-caret i');
-
-                // Keep the same fa-regular weight in both states and flip only the
-                // direction — swapping to fa-solid made the open caret read as a
-                // heavy filled block rather than a caret.
-                if (isExpanded) {
-                    $toggle.attr('aria-expanded', 'false');
-                    $content.prop('hidden', true).slideUp(200);
-                    if ($caret.length) {
-                        $caret.removeClass('fa-solid fa-square-caret-up fa-caret-up')
-                              .addClass('fa-regular fa-square-caret-down');
-                    }
-                } else {
-                    $toggle.attr('aria-expanded', 'true');
-                    $content.prop('hidden', false).slideDown(200);
-                    if ($caret.length) {
-                        $caret.removeClass('fa-solid fa-square-caret-down fa-caret-down')
-                              .addClass('fa-regular fa-square-caret-up');
-                    }
-                }
+                $toggle.attr('aria-expanded', isExpanded ? 'false' : 'true');
+                $content.prop('hidden', isExpanded);
             });
         });
     };
@@ -331,44 +307,40 @@
             $btn.off('click.iwMobileSub').on('click.iwMobileSub', function(e) {
                 e.preventDefault();
                 var isExpanded = $btn.attr('aria-expanded') === 'true';
-                var $caret = $btn.find('.iw-mega-menu__mobile-caret i');
-
-                if (isExpanded) {
-                    $btn.attr('aria-expanded', 'false');
-                    $sublist.prop('hidden', true).slideUp(200);
-                    if ($caret.length) {
-                        $caret.removeClass('fa-solid fa-square-caret-up')
-                              .addClass('fa-regular fa-square-caret-down');
-                    }
-                } else {
-                    $btn.attr('aria-expanded', 'true');
-                    $sublist.prop('hidden', false).slideDown(200);
-                    if ($caret.length) {
-                        $caret.removeClass('fa-solid fa-square-caret-down')
-                              .addClass('fa-regular fa-square-caret-up');
-                    }
-                }
+                $btn.attr('aria-expanded', isExpanded ? 'false' : 'true');
+                $sublist.prop('hidden', isExpanded);
             });
         });
     };
 
     /**
-     * Hook into Elementor Frontend and Document Ready
+     * Initialize every menu wrapper in a context, once each.
+     *
+     * Each .iw-mega-menu-wrapper holds a whole menu (nav, mobile toggle and
+     * panel), so menus from blocks, shortcodes and Elementor widgets can share
+     * a page.
+     *
+     * @param {Element|jQuery} context
      */
+    function initMenus(context) {
+        $(context).find('.iw-mega-menu-wrapper').addBack('.iw-mega-menu-wrapper').each(function() {
+            var $wrapper = $(this);
+            if ($wrapper.data('iwMegaMenu')) {
+                return;
+            }
+            $wrapper.data('iwMegaMenu', new IWMegaMenu($wrapper));
+        });
+    }
+
+    // Elementor re-renders widgets in the editor; initialize each new copy.
     $(window).on('elementor/frontend/init', function() {
         elementorFrontend.hooks.addAction('frontend/element_ready/iw-mega-menu.default', function($scope) {
-            new IWMegaMenu($scope);
+            initMenus($scope);
         });
     });
 
-    $(document).ready(function() {
-        // Fallback for non-Elementor or standalone rendering
-        if (typeof window.elementorFrontend === 'undefined') {
-            $('.iw-mega-menu__nav').each(function() {
-                var $scope = $(this).closest('.elementor-widget-iw-mega-menu, .iw-mega-menu-wrapper, body');
-                new IWMegaMenu($scope);
-            });
-        }
+    $(function() {
+        initMenus(document);
     });
 
 })(jQuery);

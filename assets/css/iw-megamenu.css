@@ -1,32 +1,84 @@
 /* ==========================================================================
-   IW Mega Menu - Modernized Base & Responsive Styles
+   IW Mega Menu
    Developed for Austin Community College - Instructional Web Projects
+
+   Styled to the ACC design system (ACC-Instructional-Web/
+   acc-new-wordpress-theme-storybook). Values come from the ACC theme's
+   theme.json custom properties when that theme is active; each fallback is
+   the same Figma token value, so the menu stays on-brand on any theme.
+
+   Interactive colors follow the ACC "background context" rule: light
+   backgrounds use orange accents and a black focus ring, dark backgrounds use
+   yellow accents and a white focus ring. The nav bar inherits the context it
+   sits in (--acc-* from the ACC theme; dark when absent), the dropdown is
+   always light and the mobile overlay is always dark.
    ========================================================================== */
 
-:root {
-  --iw-menu-purple: #4D1979;
-  --iw-menu-purple-dark: #2E1A47;
-  --iw-menu-teal: #00B2A9;
-  --iw-menu-bg-light: #F3F4F5;
-  --iw-menu-text-color: #3a2670;
-  --iw-menu-focus-ring: #4D1979;
+.iw-mega-menu-wrapper {
+  /* Palette */
+  --iw-purple: var(--wp--preset--color--purple, #4D1979);
+  --iw-dark-purple: var(--wp--preset--color--dark-purple, #2E1A47);
+  --iw-orange: var(--wp--preset--color--orange, #D23F00);
+  --iw-yellow: var(--wp--preset--color--yellow, #F0B323);
+  --iw-lime: var(--wp--preset--color--lime, #C1D82F);
+  --iw-black: var(--wp--preset--color--black, #000000);
+  --iw-dark-grey: var(--wp--preset--color--dark-grey, #5E5E5E);
+  --iw-light-grey: var(--wp--preset--color--light-grey, #F4F2F5);
+  --iw-white: var(--wp--preset--color--white, #FFFFFF);
+  --iw-purple-gradient: var(--wp--preset--gradient--purple, linear-gradient(180deg, #4D1979 3.746%, #2E1A47 96.254%));
+
+  /* Type (fluid sizes: SM 320px → LG 1200px) */
+  --iw-font: var(--wp--preset--font-family--montserrat, Montserrat, "Helvetica Neue", Arial, sans-serif);
+  --iw-fs-h3: var(--wp--preset--font-size--h-3, clamp(22px, 16.909px + 1.5909vw, 36px));
+  --iw-fs-body-xl: var(--wp--preset--font-size--body-xl, clamp(18px, 17.273px + 0.2273vw, 20px));
+  --iw-fs-body-large: var(--wp--preset--font-size--body-large, clamp(16px, 15.273px + 0.2273vw, 18px));
+  --iw-fs-body: var(--wp--preset--font-size--body, clamp(14px, 13.273px + 0.2273vw, 16px));
+  --iw-fs-caption: var(--wp--preset--font-size--caption, clamp(12px, 11.273px + 0.2273vw, 14px));
+  --iw-fs-cta: var(--wp--preset--font-size--cta, clamp(14px, 13.273px + 0.2273vw, 16px));
+
+  /* Layout */
+  --iw-space-20: var(--wp--preset--spacing--20, clamp(16px, 14.545px + 0.4545vw, 20px));
+  --iw-space-30: var(--wp--preset--spacing--30, clamp(20px, 16.364px + 1.1364vw, 30px));
+  --iw-space-40: var(--wp--preset--spacing--40, clamp(20px, 12.727px + 2.2727vw, 40px));
+  --iw-gutter: var(--wp--custom--gutter, clamp(20px, 5.455px + 4.5455vw, 60px));
+  --iw-control-height: var(--wp--custom--control--height, clamp(40px, 38.545px + 0.4545vw, 44px));
+  --iw-radius: var(--wp--custom--radius--card, 10px);
+  --iw-border: var(--wp--custom--border--default, 1.5px);
+  --iw-border-hover: var(--wp--custom--border--hover, 3px);
+  --iw-focus-width: var(--wp--custom--focus--width, 1px);
+  --iw-focus-offset: var(--wp--custom--focus--offset, 2px);
+  --iw-transition: var(--wp--custom--transition, 300ms ease);
+
+  /* Nav bar context */
+  --iw-fg: var(--acc-fg, var(--iw-white));
+  --iw-accent: var(--acc-accent, var(--iw-yellow));
+  --iw-focus: var(--acc-focus, var(--iw-white));
+
+  position: relative;
+  font-family: var(--iw-font);
 }
 
-/* Base Navigation Container */
+.iw-mega-menu-wrapper :focus-visible {
+  outline: var(--iw-focus-width) solid var(--iw-focus);
+  outline-offset: var(--iw-focus-offset);
+}
+
+/* ---------- Nav bar ---------- */
+
 .iw-mega-menu__nav {
+  position: relative;
   width: 100%;
   background: transparent;
-  position: relative;
 }
 
 .iw-mega-menu__top-level {
   display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  position: static;
   flex-wrap: wrap;
   align-items: center;
+  position: static;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .iw-mega-menu__top-item {
@@ -34,100 +86,208 @@
 }
 
 .iw-mega-menu__top-link {
-  background: none;
-  border: none;
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fff;
-  padding: 1rem 1.5rem;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.2s ease, color 0.2s ease;
-  text-transform: none;
-  text-decoration: none;
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
+  min-height: var(--iw-control-height);
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--iw-fg);
+  font-family: inherit;
+  font-size: var(--iw-fs-body);
+  font-weight: 700;
+  line-height: 1.2;
   text-align: left;
+  text-decoration: none;
+  text-transform: none;
+  cursor: pointer;
 }
 
-.iw-mega-menu__top-link:hover,
-.iw-mega-menu__top-link:focus {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+/* Accent underline: 1px on hover/focus, 3px while the dropdown is open. */
+.iw-mega-menu__top-link::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 1px;
+  background: var(--iw-accent);
+  opacity: 0;
+  transition: opacity var(--iw-transition), height var(--iw-transition);
 }
 
-.iw-mega-menu__top-link[aria-expanded="true"] {
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
+.iw-mega-menu__top-link:hover::after,
+.iw-mega-menu__top-link:focus-visible::after {
+  opacity: 1;
 }
 
-/* Top-Level icons/descriptions must stay legible regardless of the selected
-   icon color, since they sit on the (typically dark) nav bar background
-   rather than the white dropdown background the icon color presets assume. */
+.iw-mega-menu__top-link[aria-expanded="true"]::after {
+  height: var(--iw-border-hover);
+  opacity: 1;
+}
+
+/* Chevron on items that open a dropdown; points up while open. */
+.iw-mega-menu__top-link[aria-haspopup] .iw-mega-menu__link-content::after {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 13px;
+  background: currentcolor;
+  -webkit-mask: url(../icons/chevron.svg) center / contain no-repeat;
+  mask: url(../icons/chevron.svg) center / contain no-repeat;
+  transform: rotate(90deg);
+  transition: transform var(--iw-transition);
+}
+
+.iw-mega-menu__top-link[aria-expanded="true"] .iw-mega-menu__link-content::after {
+  transform: rotate(-90deg);
+}
+
+/* Icons and descriptions on the bar follow its context, whatever icon color is set. */
 .iw-mega-menu__top-link .iw-mega-menu__icon,
 .iw-mega-menu__top-link .iw-mega-menu__icon i,
 .iw-mega-menu__top-link .iw-mega-menu__icon svg {
-  color: #fff !important;
-  fill: #fff !important;
+  color: var(--iw-fg) !important;
+  fill: var(--iw-fg) !important;
 }
 
 .iw-mega-menu__top-link .iw-mega-menu__description {
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.7rem;
+  margin-top: 2px;
+  color: inherit;
+  font-size: var(--iw-fs-caption);
+  font-weight: 500;
 }
 
-/* Accessible Focus Indicators (WCAG 2.4.7 & 2.4.11) */
-.iw-mega-menu__top-link:focus-visible,
-.iw-mega-menu__section-label:focus-visible,
-.iw-mega-menu__accordion-toggle:focus-visible,
-.iw-mega-menu__third-link:focus-visible,
-.iw-mega-menu__mobile-link:focus-visible,
-.iw-mega-menu__mobile-toggle:focus-visible,
-.iw-mega-menu__mobile-close:focus-visible {
-  outline: 3px solid var(--iw-menu-focus-ring, #4D1979);
-  outline-offset: 2px;
+/* ---------- Shared item parts ---------- */
+
+.iw-mega-menu__link-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* Dropdown Container */
+.iw-mega-menu__label {
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--iw-transition), text-decoration-thickness var(--iw-transition);
+}
+
+.iw-mega-menu__description {
+  display: block;
+  margin-top: 4px;
+  font-family: inherit;
+  font-size: var(--iw-fs-caption);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--iw-dark-grey);
+}
+
+.iw-mega-menu__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  font-size: 1.2rem;
+  overflow: visible;
+  vertical-align: middle;
+}
+
+.iw-mega-menu__icon svg,
+.iw-mega-menu__icon i,
+.iw-mega-menu__icon img {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+/* Badge: the ACC "tag" (outlined, follows the text color) on the bar and in
+   the mobile overlay; the ACC "chip" (purple) inside the white dropdown. */
+.iw-mega-menu__badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  box-shadow: inset 0 0 0 1px currentcolor;
+  font-size: var(--iw-fs-caption);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.iw-mega-menu__dropdown .iw-mega-menu__badge {
+  padding: 4px 8px;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--iw-purple);
+  color: var(--iw-white);
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+
+/* ---------- Dropdown panel (light context) ---------- */
+
 .iw-mega-menu__dropdown {
+  --iw-fg: var(--iw-black);
+  --iw-accent: var(--iw-orange);
+  --iw-focus: var(--iw-black);
+
   position: absolute;
+  top: 100%;
   left: 0;
   right: 0;
-  top: 100%;
-  width: 100%;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   z-index: 1002;
+  box-sizing: border-box;
+  width: 100%;
   margin-top: 8px;
-  padding: 2rem 2.5rem;
+  padding: var(--iw-space-40);
+  border-radius: var(--iw-radius);
+  background: var(--iw-white);
+  color: var(--iw-fg);
+  box-shadow: 0 20px 40px rgb(46 26 71 / 0.2);
+  font-size: var(--iw-fs-body);
+  font-weight: 500;
+  line-height: 1.5;
+
+  /* Closed: invisible and out of the tab order. Fades and slides in when opened. */
+  visibility: hidden;
   opacity: 0;
   transform: translateY(-12px);
-  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
-  box-sizing: border-box;
+  transition:
+    opacity var(--iw-transition),
+    transform var(--iw-transition),
+    visibility 0s linear 300ms;
 }
 
 .iw-mega-menu__dropdown:not([hidden]),
 .iw-mega-menu__dropdown.is-active {
+  visibility: visible;
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+  transition-delay: 0s;
 }
 
 .iw-mega-menu__dropdown--with-sidebar {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 2.5rem;
-  align-items: flex-start;
-  width: 100%;
+  align-items: start;
+  gap: var(--iw-space-40);
 }
 
 .iw-mega-menu__dropdown--no-sidebar {
   display: block;
-  width: 100%;
   min-width: 0;
   max-width: 100%;
 }
@@ -135,138 +295,84 @@
 .iw-mega-menu__dropdown-main {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--iw-space-20);
+  min-width: 0;
 }
 
-.iw-mega-menu__link-content {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+/* Hover bridge between the bar and the dropdown. */
+.iw-mega-menu__dropdown-buffer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1001;
+  width: 100%;
+  height: 18px;
+  background: transparent;
+  pointer-events: auto;
 }
 
-.iw-mega-menu__description {
-  display: block;
-  font-family: inherit;
-  font-weight: 400;
-  font-size: 0.825rem;
-  color: #333;
-  line-height: 1.4;
-  margin-top: 0.25rem;
+/* Second-level sections (no accordion): two columns. */
+.iw-mega-menu__second-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--iw-space-20) var(--iw-space-40);
+}
+
+.iw-mega-menu__second-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--iw-space-20);
+  min-width: 0;
 }
 
 .iw-mega-menu__section-label {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  text-align: left;
+  padding: 0;
+  color: var(--iw-fg);
   font-family: inherit;
+  font-size: var(--iw-fs-body-xl);
   font-weight: 600;
-  color: #5a3fa0;
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  text-transform: none;
-  text-decoration: none;
-  padding: 0.5rem 0;
-  border-radius: 6px;
-  transition: color 0.2s ease;
-}
-
-.iw-mega-menu__section-label:hover,
-.iw-mega-menu__section-label:focus {
-  color: var(--iw-menu-purple, #4D1979);
-}
-
-.iw-mega-menu__section-label .iw-mega-menu__description {
-  color: #333;
-}
-
-/* Icon Management */
-.iw-mega-menu__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
-  font-size: 1.2rem;
-  margin-right: 0.5em;
-  overflow: visible;
-  vertical-align: middle;
-  flex-shrink: 0;
-}
-
-.iw-mega-menu__icon svg,
-.iw-mega-menu__icon i {
-  width: 1rem;
-  height: 1rem;
-  font-size: 1rem;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-/* Badge Styling */
-.iw-mega-menu__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.5rem;
-  height: 1.5rem;
-  padding: 0 0.5rem;
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
-  color: #fff;
-  background-color: var(--iw-menu-purple, #4D1979);
-  border-radius: 1rem;
-  text-transform: none;
-  letter-spacing: 0.025em;
-}
-
-.iw-mega-menu__top-link .iw-mega-menu__badge {
-  font-size: 0.7rem;
-  min-width: 1.25rem;
-  height: 1.25rem;
-}
-
-.iw-mega-menu__mobile-link .iw-mega-menu__badge {
-  font-size: 0.7rem;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  margin-left: 0.5rem;
-}
-
-/* Section & Accordions */
-.iw-mega-menu__section {
-  margin-top: 0.5rem;
-}
-
-.iw-mega-menu__section:first-child {
-  margin-top: 0.25rem;
-}
-
-/* Wrapping row, not a column: the label and caret share the first line, and the
-   optional description wraps onto a full-width second line. A column layout put
-   the caret on its own row below the text, leaving dead vertical space. */
-.iw-mega-menu__accordion-toggle {
-  background: var(--iw-menu-bg-light, #F3F4F5);
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  width: 100%;
+  line-height: 1.3;
   text-align: left;
-  padding: 0.75rem 1rem;
-  transition: background 0.2s ease, color 0.2s ease;
-  position: relative;
-  cursor: pointer;
+  text-decoration: none;
+  text-transform: none;
+}
+
+a.iw-mega-menu__section-label:hover .iw-mega-menu__label,
+.iw-mega-menu__accordion-toggle:hover .iw-mega-menu__label,
+.iw-mega-menu__third-link:hover .iw-mega-menu__label,
+.iw-mega-menu__mobile-link:hover .iw-mega-menu__label {
+  text-decoration-color: var(--iw-accent);
+}
+
+/* Accordion sections — ACC accordion: bold title, 1px dark-grey rule between
+   items, accent plus that turns into a close ×. */
+.iw-mega-menu__accordion {
+  margin: 0;
+}
+
+.iw-mega-menu__second-list + .iw-mega-menu__accordion,
+.iw-mega-menu__accordion + .iw-mega-menu__accordion {
+  border-top: 1px solid var(--iw-dark-grey);
+}
+
+.iw-mega-menu__accordion-toggle {
   display: flex;
-  /* Must be explicit: this element also carries .iw-mega-menu__section-label,
-     which sets flex-direction: column. Without this the column direction leaks
-     back in and align-items: center centers the title horizontally. */
-  flex-direction: row;
+  flex-direction: row; /* overrides the section-label column */
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
-  column-gap: 0.75rem;
+  column-gap: var(--iw-space-30);
+  width: 100%;
+  padding: var(--iw-space-20) 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--iw-fg);
+  font-size: var(--iw-fs-body);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .iw-mega-menu__accordion-toggle .iw-mega-menu__link-content {
@@ -275,198 +381,228 @@
 }
 
 .iw-mega-menu__accordion-toggle .iw-mega-menu__caret {
-  flex: 0 0 auto;
   order: 1;
   margin-left: auto;
-  align-self: center;
-  line-height: 1;
-  color: inherit;
 }
 
-/* Full-width basis forces the description onto its own line under the label. */
+/* Full-width basis puts the description on its own line under the title. */
 .iw-mega-menu__accordion-toggle .iw-mega-menu__description {
   flex: 1 1 100%;
   order: 2;
-  color: inherit;
-  opacity: 0.85;
-}
-
-.iw-mega-menu__accordion-toggle[aria-expanded="true"] {
-  background: var(--iw-menu-purple, #4D1979);
-  color: #fff;
 }
 
 .iw-mega-menu__section-content {
-  color: #222;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 0.75rem 0 1rem 0;
+  padding: 0 0 var(--iw-space-20);
 }
 
 .iw-mega-menu__section-content[hidden] {
   display: none;
 }
 
-/* Third-Level Grid */
+/* Third-level links: three columns. */
 .iw-mega-menu__third-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px var(--iw-space-30);
 }
 
 .iw-mega-menu__third-col {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  min-width: 120px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .iw-mega-menu__third-link {
   display: flex;
   flex-direction: column;
+  padding: 0;
+  color: var(--iw-fg);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: var(--iw-fs-body);
   font-weight: 500;
-  color: #5a3fa0;
+  line-height: 1.5;
   text-decoration: none;
-  padding: 0.25rem 0;
-  transition: color 0.2s ease;
   text-transform: none;
-  border-radius: 4px;
 }
 
-.iw-mega-menu__third-link:hover,
-.iw-mega-menu__third-link:focus {
-  color: var(--iw-menu-purple, #4D1979);
-}
-
-.iw-mega-menu__third-link .iw-mega-menu__description {
-  color: #333;
-}
-
-/* Second-Level Non-Accordion Grid */
-.iw-mega-menu__second-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.iw-mega-menu__second-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-/* Sidebar Styling */
+/* Sidebar */
 .iw-mega-menu-sidebar {
-  background: var(--iw-menu-bg-light, #f5f5fa);
-  border-radius: 12px;
-  padding: 1.5rem;
-  min-width: 220px;
-  max-width: 100%;
   box-sizing: border-box;
+  max-width: 100%;
+  min-width: 220px;
+  padding: var(--iw-space-30);
+  border-radius: var(--iw-radius);
+  background: var(--iw-light-grey);
 }
 
-/* Dropdown Buffer for hover smoothing */
-.iw-mega-menu__dropdown-buffer {
+/* ---------- Disclosure icon (accordions, mobile sublists) ---------- */
+
+.iw-mega-menu__caret,
+.iw-mega-menu__mobile-caret {
+  position: relative;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--iw-accent);
+  transition: transform var(--iw-transition);
+}
+
+.iw-mega-menu__caret::before,
+.iw-mega-menu__caret::after,
+.iw-mega-menu__mobile-caret::before,
+.iw-mega-menu__mobile-caret::after {
+  content: "";
   position: absolute;
+  top: 50%;
   left: 0;
   width: 100%;
-  height: 18px;
-  top: 100%;
-  z-index: 1001;
-  background: transparent;
-  pointer-events: auto;
+  height: 2px;
+  margin-top: -1px;
+  background: currentcolor;
 }
 
-/* Color Palette Utility Classes
-   The nested i/svg selectors are load-bearing: the widget's global "Icon Color"
-   style control emits a rule targeting `.iw-mega-menu__icon i` directly, and a
-   direct rule on the child always beats a color inherited from the parent —
-   even an !important one. Repeating the color on the child keeps each item's
-   own accent color winning over the global control. */
-.icon-acc-purple,      .icon-acc-purple i,      .icon-acc-purple svg      { color: #4D1979 !important; fill: #4D1979 !important; }
-.icon-acc-purple-dark, .icon-acc-purple-dark i, .icon-acc-purple-dark svg { color: #2E1A47 !important; fill: #2E1A47 !important; }
-.icon-acc-teal,        .icon-acc-teal i,        .icon-acc-teal svg        { color: #00B2A9 !important; fill: #00B2A9 !important; }
-.icon-acc-blue-dark,   .icon-acc-blue-dark i,   .icon-acc-blue-dark svg   { color: #002F6C !important; fill: #002F6C !important; }
-.icon-acc-blue-light,  .icon-acc-blue-light i,  .icon-acc-blue-light svg  { color: #6787B7 !important; fill: #6787B7 !important; }
-.icon-acc-lime,        .icon-acc-lime i,        .icon-acc-lime svg        { color: #C1D82F !important; fill: #C1D82F !important; }
-.icon-acc-yellow,      .icon-acc-yellow i,      .icon-acc-yellow svg      { color: #F0B323 !important; fill: #F0B323 !important; }
-.icon-acc-orange,      .icon-acc-orange i,      .icon-acc-orange svg      { color: #FA4616 !important; fill: #FA4616 !important; }
-.icon-acc-red,         .icon-acc-red i,         .icon-acc-red svg         { color: #AF272F !important; fill: #AF272F !important; }
-.icon-acc-black,       .icon-acc-black i,       .icon-acc-black svg       { color: #000000 !important; fill: #000000 !important; }
-.icon-acc-grey,        .icon-acc-grey i,        .icon-acc-grey svg        { color: #8A8C8F !important; fill: #8A8C8F !important; }
+.iw-mega-menu__caret::after,
+.iw-mega-menu__mobile-caret::after {
+  transform: rotate(90deg);
+}
 
-/* Hamburger Toggle Button */
-.iw-mega-menu__mobile-toggle {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 1.75rem;
-  color: #fff;
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+[aria-expanded="true"] > .iw-mega-menu__caret,
+[aria-expanded="true"] > .iw-mega-menu__mobile-caret {
+  transform: rotate(45deg);
+}
+
+/* ---------- Icon colors (ACC palette) ----------
+   The nested i/svg selectors are load-bearing: the Elementor widget's global
+   "Icon Color" control targets `.iw-mega-menu__icon i` directly, and a direct
+   rule on the child beats an inherited color, even an !important one.
+   Teal, blue and red are not ACC brand colors; menus saved with them render
+   in the nearest brand color. */
+.icon-acc-purple,      .icon-acc-purple i,      .icon-acc-purple svg      { color: var(--iw-purple) !important; fill: var(--iw-purple) !important; }
+.icon-acc-purple-dark, .icon-acc-purple-dark i, .icon-acc-purple-dark svg { color: var(--iw-dark-purple) !important; fill: var(--iw-dark-purple) !important; }
+.icon-acc-orange,      .icon-acc-orange i,      .icon-acc-orange svg      { color: var(--iw-orange) !important; fill: var(--iw-orange) !important; }
+.icon-acc-yellow,      .icon-acc-yellow i,      .icon-acc-yellow svg      { color: var(--iw-yellow) !important; fill: var(--iw-yellow) !important; }
+.icon-acc-lime,        .icon-acc-lime i,        .icon-acc-lime svg        { color: var(--iw-lime) !important; fill: var(--iw-lime) !important; }
+.icon-acc-black,       .icon-acc-black i,       .icon-acc-black svg       { color: var(--iw-black) !important; fill: var(--iw-black) !important; }
+.icon-acc-grey,        .icon-acc-grey i,        .icon-acc-grey svg        { color: var(--iw-dark-grey) !important; fill: var(--iw-dark-grey) !important; }
+.icon-acc-teal,        .icon-acc-teal i,        .icon-acc-teal svg,
+.icon-acc-blue-light,  .icon-acc-blue-light i,  .icon-acc-blue-light svg  { color: var(--iw-purple) !important; fill: var(--iw-purple) !important; }
+.icon-acc-blue-dark,   .icon-acc-blue-dark i,   .icon-acc-blue-dark svg   { color: var(--iw-dark-purple) !important; fill: var(--iw-dark-purple) !important; }
+.icon-acc-red,         .icon-acc-red i,         .icon-acc-red svg         { color: var(--iw-orange) !important; fill: var(--iw-orange) !important; }
+
+/* ---------- Mobile: MENU pill and overlay ---------- */
+
+/* MENU pill — matches the ACC header's menu button: orange, CTA type, yellow
+   ring on hover. The close button inside the overlay is its × twin. */
+.iw-mega-menu__mobile-toggle,
+.iw-mega-menu__mobile-close {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: var(--iw-control-height);
+  padding: 0 18px;
+  border: 0;
+  border-radius: 50px;
+  background: var(--iw-orange);
+  color: var(--iw-white);
+  font-family: var(--iw-font);
+  font-size: var(--iw-fs-cta);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 0 var(--iw-yellow);
+  transition: box-shadow var(--iw-transition);
 }
 
-/* Mobile Navigation Panel / Modal Dialog */
+.iw-mega-menu__mobile-toggle {
+  display: none;
+}
+
+.iw-mega-menu__mobile-toggle:hover,
+.iw-mega-menu__mobile-close:hover {
+  box-shadow: inset 0 0 0 var(--iw-border) var(--iw-yellow);
+}
+
+.iw-mega-menu__mobile-button-icon {
+  flex: none;
+  width: 16px;
+  height: 14px;
+  background: currentcolor;
+  -webkit-mask: url(../icons/menu.svg) center / 16px 16px no-repeat;
+  mask: url(../icons/menu.svg) center / 16px 16px no-repeat;
+}
+
+.iw-mega-menu__mobile-close .iw-mega-menu__mobile-button-icon {
+  width: 14px;
+  height: 14px;
+  -webkit-mask: url(../icons/close.svg) center / contain no-repeat;
+  mask: url(../icons/close.svg) center / contain no-repeat;
+}
+
 .iw-mega-menu__mobile-panel {
   display: none;
 }
 
-/* Body Scroll Lock */
+/* Body scroll lock while the overlay is open */
 html.iw-mega-menu-mobile-open,
 body.iw-mega-menu-mobile-open {
   overflow: hidden !important;
 }
 
 /* ==========================================================================
-   Responsive Breakpoints
+   Breakpoints — ACC frames: SM < 700px, MD 700–1199px, LG ≥ 1200px
    ========================================================================== */
 
-/* Tablet Optimization (768px to 1024px) */
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 700px) and (max-width: 1199px) {
   .iw-mega-menu__dropdown--with-sidebar {
     grid-template-columns: 65% 35%;
-    gap: 1.5rem;
+    gap: var(--iw-space-30);
   }
-  .iw-mega-menu__dropdown {
-    padding: 1.5rem;
+
+  .iw-mega-menu__third-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-/* Mobile Breakpoint (<= 767px) */
-@media (max-width: 767px) {
+@media (max-width: 699px) {
   .iw-mega-menu__nav {
     display: none !important;
   }
 
-  .iw-mega-menu__mobile-toggle {
+  /* Small screens: icon-only circle, as in the ACC header. The text stays the accessible name. */
+  .iw-mega-menu__mobile-toggle,
+  .iw-mega-menu__mobile-close {
     display: inline-flex;
+    width: var(--iw-control-height);
+    padding: 0;
+    gap: 0;
+    font-size: 0;
   }
 
+  /* Overlay — ACC menu panel: purple gradient, white text, yellow accents. */
   .iw-mega-menu__mobile-panel {
+    --iw-fg: var(--iw-white);
+    --iw-accent: var(--iw-yellow);
+    --iw-focus: var(--iw-white);
+
     display: block;
     position: fixed;
     top: 0;
     left: 0;
+    z-index: 999999;
+    box-sizing: border-box;
     width: 100vw;
     height: 100vh;
     height: 100dvh;
     max-height: 100vh;
     max-height: 100dvh;
-    background: #fff;
-    z-index: 999999;
+    padding-bottom: var(--iw-space-40);
     overflow-y: auto;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-    box-sizing: border-box;
-    transform: translateX(0);
-    transition: opacity 0.25s ease;
+    background: var(--iw-purple-gradient);
+    color: var(--iw-fg);
   }
 
   .iw-mega-menu__mobile-panel[hidden] {
@@ -474,107 +610,109 @@ body.iw-mega-menu-mobile-open {
   }
 
   .iw-mega-menu__mobile-topbar {
-    width: 100%;
-    background: var(--iw-menu-purple-dark, #2E1A47);
-    padding: 0.75rem 1.25rem;
-    min-height: 3.5rem;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     box-sizing: border-box;
-  }
-
-  .iw-mega-menu__mobile-close {
-    background: transparent;
-    color: #fff;
-    border: none;
-    font-size: 2rem;
-    cursor: pointer;
-    width: 2.75rem;
-    height: 2.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border-radius: 8px;
-    transition: background 0.2s ease;
-  }
-
-  .iw-mega-menu__mobile-close:hover,
-  .iw-mega-menu__mobile-close:focus {
-    background: rgba(255, 255, 255, 0.2);
+    width: 100%;
+    padding: 10px var(--iw-gutter);
   }
 
   .iw-mega-menu__mobile-list,
   .iw-mega-menu__mobile-sublist {
-    list-style: none;
     margin: 0;
     padding: 0;
+    list-style: none;
   }
 
   .iw-mega-menu__mobile-list {
-    padding: 1.25rem;
+    padding: 0 var(--iw-gutter);
+  }
+
+  /* Primary items: H3 size, 1px white rule between. */
+  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item {
+    padding-block: clamp(16px, 12.364px + 1.1364vw, 30px);
+    border-bottom: 1px solid var(--iw-white);
+  }
+
+  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item:last-child {
+    border-bottom: 0;
+  }
+
+  .iw-mega-menu__mobile-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--iw-space-20);
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--iw-fs-body);
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
+    font-size: var(--iw-fs-h3);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link .iw-mega-menu__mobile-caret {
+    width: 32px;
+    height: 32px;
+  }
+
+  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link .iw-mega-menu__mobile-caret::before,
+  .iw-mega-menu__mobile-list > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link .iw-mega-menu__mobile-caret::after {
+    left: 4px;
+    width: auto;
+    right: 4px;
   }
 
   .iw-mega-menu__mobile-sublist {
-    background: var(--iw-menu-bg-light, #F3F4F5);
-    padding-left: 1.25rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--iw-space-20);
+    padding-top: var(--iw-space-20);
   }
 
   .iw-mega-menu__mobile-sublist[hidden] {
     display: none;
   }
 
+  .iw-mega-menu__mobile-sublist > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
+    font-size: var(--iw-fs-body-xl);
+  }
+
   .iw-mega-menu__mobile-sublist .iw-mega-menu__mobile-sublist {
-    padding-left: 2rem;
-    background: #e9eaec;
+    padding-left: var(--iw-space-20);
   }
 
-  .iw-mega-menu__mobile-item {
-    margin-bottom: 0.5rem;
+  .iw-mega-menu__mobile-sublist .iw-mega-menu__mobile-sublist > .iw-mega-menu__mobile-item > .iw-mega-menu__mobile-link {
+    font-size: var(--iw-fs-body);
   }
 
-  .iw-mega-menu__mobile-link {
-    background: none;
-    border: none;
-    font-family: inherit;
-    font-size: 1rem;
-    line-height: 1.5;
-    font-weight: 500;
-    color: var(--iw-menu-text-color, #3a2670);
-    text-decoration: none;
-    padding: 0.75rem 0.5rem;
-    width: 100%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    text-align: left;
-    transition: background 0.2s ease, color 0.2s ease;
-    border-radius: 6px;
-    box-sizing: border-box;
-  }
-
-  .iw-mega-menu__mobile-link:hover,
-  .iw-mega-menu__mobile-link:focus {
-    background: #f0f0f8;
-    color: var(--iw-menu-purple, #4D1979);
-  }
-
-  .iw-mega-menu__mobile-caret {
-    margin-left: 0.5rem;
-    font-size: 1.1rem;
-    color: var(--iw-menu-text-color, #3a2670);
-    flex-shrink: 0;
-  }
-
+  /* Sidebar — ACC ancillary card: 1px white border, card radius. */
   .iw-mega-menu__mobile-sidebar {
-    padding: 1.25rem;
-    border-top: 1px solid #e0e0e0;
-    margin-top: 1rem;
+    margin: var(--iw-space-30) var(--iw-gutter) 0;
+    padding: clamp(20px, 17.727px + 0.7102vw, 30px);
+    border: 1px solid var(--iw-white);
+    border-radius: var(--iw-radius);
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .iw-mega-menu-wrapper *,
+  .iw-mega-menu-wrapper *::before,
+  .iw-mega-menu-wrapper *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

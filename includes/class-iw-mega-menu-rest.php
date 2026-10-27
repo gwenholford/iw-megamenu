@@ -26,6 +26,13 @@ class IW_Mega_Menu_REST {
 	}
 
 	/**
+	 * Listing menus only exposes titles, so anyone who can place the block may do it.
+	 */
+	public function check_list_permission() {
+		return current_user_can( 'edit_posts' );
+	}
+
+	/**
 	 * Register REST API Endpoints.
 	 */
 	public function register_endpoints() {
@@ -35,7 +42,7 @@ class IW_Mega_Menu_REST {
 			[
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => [ $this, 'get_menus' ],
-				'permission_callback' => [ $this, 'check_permission' ],
+				'permission_callback' => [ $this, 'check_list_permission' ],
 			],
 			[
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -71,7 +78,7 @@ class IW_Mega_Menu_REST {
 
 		register_rest_route( $namespace, '/templates', [
 			'methods'             => WP_REST_Server::READABLE,
-			'callback'            => [ $this, 'get_elementor_templates' ],
+			'callback'            => [ $this, 'get_sidebar_templates' ],
 			'permission_callback' => [ $this, 'check_permission' ],
 		] );
 
@@ -143,11 +150,12 @@ class IW_Mega_Menu_REST {
 		}
 
 		$menu_data = get_post_meta( $post_id, '_iw_mega_menu_data', true );
+		$decoded   = is_string( $menu_data ) && '' !== $menu_data ? json_decode( $menu_data, true ) : null;
 
 		return rest_ensure_response( [
 			'id'    => $post_id,
 			'title' => $post->post_title,
-			'data'  => $menu_data ? json_decode( $menu_data, true ) : [ 'items' => [], 'settings' => [] ],
+			'data'  => is_array( $decoded ) ? $decoded : [ 'items' => [], 'settings' => [] ],
 		] );
 	}
 
@@ -222,22 +230,11 @@ class IW_Mega_Menu_REST {
 		] );
 	}
 
-	public function get_elementor_templates( $request ) {
-		$templates = get_posts( [
-			'post_type'      => 'elementor_library',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-		] );
-
-		$data = [];
-		foreach ( $templates as $template ) {
-			$data[] = [
-				'id'    => $template->ID,
-				'title' => $template->post_title,
-			];
-		}
-
-		return rest_ensure_response( $data );
+	/**
+	 * Content a dropdown sidebar can show: patterns, plus Elementor templates when Elementor is active.
+	 */
+	public function get_sidebar_templates( $request ) {
+		return rest_ensure_response( IW_Mega_Menu_Renderer::get_sidebar_sources() );
 	}
 
 	/**

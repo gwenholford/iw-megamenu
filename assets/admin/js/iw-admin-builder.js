@@ -3,25 +3,22 @@
  * Full tree editor with live preview, WP menu import, CRUD operations
  *
  * @package IWMegaMenu
- * @version 2.0.0
+ * @version 3.0.0
  */
 document.addEventListener('DOMContentLoaded', () => {
 	const root = document.getElementById('iw-mega-menu-builder-root');
 	if (!root) return;
 
-	// ── Icon color presets (matches Elementor widget) ──
+	// ── Icon color presets: the ACC brand palette (matches the Elementor widget) ──
+	// Retired teal/blue/red classes on older menus still render, mapped to brand colors in CSS.
 	const ICON_COLORS = {
-		'icon-acc-purple':      { label: 'Purple',        hex: '#4D1979' },
-		'icon-acc-purple-dark': { label: 'Purple (Dark)', hex: '#2E1A47' },
-		'icon-acc-teal':        { label: 'Teal',          hex: '#00B2A9' },
-		'icon-acc-blue-dark':   { label: 'Blue (Dark)',   hex: '#002F6C' },
-		'icon-acc-blue-light':  { label: 'Blue (Light)',  hex: '#6787B7' },
-		'icon-acc-lime':        { label: 'Lime',          hex: '#C1D82F' },
-		'icon-acc-yellow':      { label: 'Yellow',        hex: '#F0B323' },
-		'icon-acc-orange':      { label: 'Orange',        hex: '#FA4616' },
-		'icon-acc-red':         { label: 'Red',           hex: '#AF272F' },
-		'icon-acc-black':       { label: 'Black',         hex: '#000000' },
-		'icon-acc-grey':        { label: 'Grey',          hex: '#8A8C8F' },
+		'icon-acc-purple':      { label: 'Purple',      hex: '#4D1979' },
+		'icon-acc-purple-dark': { label: 'Dark Purple', hex: '#2E1A47' },
+		'icon-acc-orange':      { label: 'Orange',      hex: '#D23F00' },
+		'icon-acc-yellow':      { label: 'Yellow',      hex: '#F0B323' },
+		'icon-acc-lime':        { label: 'Lime',        hex: '#C1D82F' },
+		'icon-acc-black':       { label: 'Black',       hex: '#000000' },
+		'icon-acc-grey':        { label: 'Dark Grey',   hex: '#5E5E5E' },
 	};
 
 	// ── Curated Font Awesome 6 picker set (the CDN build loaded on this page) ──
@@ -503,6 +500,12 @@ document.addEventListener('DOMContentLoaded', () => {
 					</div>
 				</div>
 
+				${this.currentMenuId ? `
+				<p class="description iw-embed-hint">
+					Place this menu with the <strong>IW Mega Menu</strong> block, the shortcode <code>[iw_mega_menu id="${esc(this.currentMenuId)}"]</code>,
+					the template tag <code>&lt;?php iw_mega_menu( ${esc(this.currentMenuId)} ); ?&gt;</code>, or the Elementor widget.
+				</p>` : ''}
+
 				${this.isCreatingMenu ? `
 				<div class="iw-builder-inline-bar" id="iw-newmenu-bar">
 					<label for="iw-newmenu-name">New Menu Name:</label>
@@ -664,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				`<option value="${cls}" ${iconColorClass === cls ? 'selected' : ''}>${info.label}</option>`
 			).join('');
 			const sidebarOptions = this.templates.map(t =>
-				`<option value="${t.id}" ${item.sidebar_template_id == t.id ? 'selected' : ''}>${esc(t.title)}</option>`
+				`<option value="${t.id}" ${item.sidebar_template_id == t.id ? 'selected' : ''}>${t.type ? esc(t.type) + ': ' : ''}${esc(t.title)}</option>`
 			).join('');
 
 			return `
@@ -756,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
 							<option value="">None</option>
 							${sidebarOptions}
 						</select>
-						<p class="iw-field-hint">Shows a saved Elementor template beside this item's dropdown.</p>
+						<p class="iw-field-hint">Shows a pattern (or a saved Elementor template, when Elementor is active) beside this item's dropdown.</p>
 					</div>` : ''}
 				</div>` : ''}
 			</div>`;
@@ -774,7 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const topDescHtml = top.item_description ? `<span class="iw-mega-menu__description">${esc(top.item_description)}</span>` : '';
 				const topLinkContent = `<span class="iw-mega-menu__link-content">
 						${topIconHtml}
-						${esc(top.item_label)}
+						<span class="iw-mega-menu__label">${esc(top.item_label)}</span>
 						${top.item_badge ? `<span class="iw-mega-menu__badge">${esc(top.item_badge)}</span>` : ''}
 					</span>
 					${topDescHtml}`;
@@ -790,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			return `
 				<div class="iw-preview-container">
-					<div class="iw-mega-menu-wrapper" style="background: var(--iw-menu-purple-dark, #2E1A47); border-radius: 8px;">
+					<div class="iw-mega-menu-wrapper" style="background: #4D1979; border-radius: 10px;">
 						<nav class="iw-mega-menu__nav" aria-label="Preview Navigation">
 							<ul class="iw-mega-menu__top-level">${topLinks}</ul>
 						</nav>
@@ -815,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						return `<${hasUrl ? 'a href="' + esc(s.item_link.url) + '"' : 'div role="heading" aria-level="3"'} class="iw-mega-menu__section-label">
 							<span class="iw-mega-menu__link-content">
 								${iconHtml}
-								${esc(s.item_label)}
+								<span class="iw-mega-menu__label">${esc(s.item_label)}</span>
 								${s.item_badge ? `<span class="iw-mega-menu__badge">${esc(s.item_badge)}</span>` : ''}
 							</span>
 							${s.item_description ? `<span class="iw-mega-menu__description">${esc(s.item_description)}</span>` : ''}
@@ -835,18 +838,18 @@ document.addEventListener('DOMContentLoaded', () => {
 					<button class="iw-mega-menu__section-label iw-mega-menu__accordion-toggle" type="button" data-preview-section="${s.id}" aria-expanded="${sectionOpen}">
 						<span class="iw-mega-menu__link-content">
 							${iconHtml}
-							${esc(s.item_label)}
+							<span class="iw-mega-menu__label">${esc(s.item_label)}</span>
 							${s.item_badge ? `<span class="iw-mega-menu__badge">${esc(s.item_badge)}</span>` : ''}
 						</span>
 						${s.item_description ? `<span class="iw-mega-menu__description">${esc(s.item_description)}</span>` : ''}
-						<span class="iw-mega-menu__caret" aria-hidden="true"><i class="fa-regular fa-square-caret-${sectionOpen ? 'up' : 'down'}"></i></span>
+						<span class="iw-mega-menu__caret" aria-hidden="true"></span>
 					</button>
 					<div class="iw-mega-menu__section-content" ${sectionOpen ? '' : 'hidden'}>
 						${thirdLinks.length === 0 ? '<p class="iw-preview-note">No links in this section yet.</p>' : `
 						<div class="iw-mega-menu__third-list">
 							${thirdCols.map(col => `<div class="iw-mega-menu__third-col">${col.map(l =>
 								`<a class="iw-mega-menu__third-link" href="${esc(l.item_link?.url || '#')}">
-									<span class="iw-mega-menu__link-content">${esc(l.item_label)}${l.item_badge ? `<span class="iw-mega-menu__badge">${esc(l.item_badge)}</span>` : ''}</span>
+									<span class="iw-mega-menu__link-content"><span class="iw-mega-menu__label">${esc(l.item_label)}</span>${l.item_badge ? `<span class="iw-mega-menu__badge">${esc(l.item_badge)}</span>` : ''}</span>
 								</a>`
 							).join('')}</div>`).join('')}
 						</div>`}
